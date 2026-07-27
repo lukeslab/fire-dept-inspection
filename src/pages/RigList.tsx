@@ -1,14 +1,15 @@
+import { useState, useEffect } from "react";
 import { AppPage } from "@/components/application/AppPage";
 import { PageHeader } from "@/components/application/PageHeader";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
 import { CreateRigDialog } from "@/components/rigs/CreateRigDialog";
 import { RigCard } from "@/components/rigs/RigCard";
-
-import type { Rig } from "@/models/Rig";
 import { SpinnerButton } from "@/components/rigs/SpinnerButton";
 
 import { ErrorMessage } from "@/components/application/ErrorMessage";
+
+import type { Rig } from "@/models/Rig";
+
 export default function RigList() {
     const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
     const [rigs, setRigs] = useState<Rig[]>([]);
@@ -16,24 +17,6 @@ export default function RigList() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect( () => {
-        async function loadRigs() {
-            try {
-                const response = await fetch("/api/rigs");
-
-                if (!response.ok) {
-                    throw new Error(`Error fetching rigs: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                setRigs(data);
-                console.log(data)
-            } catch (err) {
-                if (err instanceof Error) setError(err.message)
-                else setError("An unepected error occured.")
-            } finally {
-                setIsLoading(false);
-            }
-        }
 
         loadRigs()
     }, [])
@@ -60,7 +43,29 @@ export default function RigList() {
             <CreateRigDialog
                 open={isCreateDialogOpen}
                 onOpenChange={setCreateDialogOpen}
+                loadRigs={loadRigs}
             />
         </>
     );
+
+
+    async function loadRigs() {
+        try {
+            const response = await fetch("/api/rigs");
+
+            if (!response.ok) {
+                throw new Error(`Error fetching rigs: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            setRigs(data);
+            console.log(data)
+        } catch (err) {
+            if (err instanceof Error) setError(err.message)
+            else setError("An unepected error occured.")
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
 }

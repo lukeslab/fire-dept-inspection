@@ -17,10 +17,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
+import { PlusIcon, Trash2 } from 'lucide-react';
 
 interface CreateRigDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    loadRigs: () => void;
 }
 
 interface NewCompartment {
@@ -32,29 +34,40 @@ interface NewCompartment {
 export function CreateRigDialog({
     open,
     onOpenChange,
+    loadRigs
 }: CreateRigDialogProps) {
 
     const [compartments, setCompartments] = useState<NewCompartment[]>([{clientId: crypto.randomUUID(), value: ""}])
+    const [name, setName] = useState<string>("")
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+    const [validationErrors, setValidationErrors] = useState<string[]>([])
+    const [requestErrors, setRequestErrors] = useState<string | null>(null)
+    const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
     return (
         <Dialog
             open={open}
             onOpenChange={onOpenChange}
         >
-            <DialogContent>
-                <form>
+            <DialogContent className="overflow-y-auto max-h-[90vh]">
+                <form onSubmit={handleCreateRigDialogSubmit}>
                     <FieldGroup>
                         <FieldSet>
                             <FieldLegend>
-                                Add New Rig
+                                Create New Rig
                             </FieldLegend>
                             <FieldDescription>
-                                Add a new apparatus and its compartments.
+                                Enter new apparatus name and its compartments.
                             </FieldDescription>
                             <FieldGroup>
                                 <Field>
                                     <FieldLabel htmlFor="name">Name</FieldLabel>
-                                    <Input id="name" placeholder="Engine 240" />
+                                    <Input 
+                                        id="name" 
+                                        placeholder="Engine 240" 
+                                        value={name}
+                                        onChange={event => handleNameInputChange(event.target.value)}
+                                    />
                                 </Field>
                             </FieldGroup>
                         </FieldSet>
@@ -75,31 +88,112 @@ export function CreateRigDialog({
                                         value={compartment?.value} 
                                         onChange={event => handleNewCompartmentInputChange(index, event.target.value)}    
                                     />
+                                    <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </Field>
                             )
                         })}
-                                    
+
                                 <Field orientation="horizontal">
-                                    <Button onClick={handleAddNewCompartment}>New Compartment</Button>
+                                    <Button type="button" variant="outline" onClick={handleAddNewCompartment}>
+                                        <PlusIcon 
+                                            className="h-4 w-4" /> Add Compartment
+                                    </Button>
                                 </Field>
                             </FieldGroup>
                         </FieldSet>
-                        
-                        <Field orientation="horizontal">
-                            <Button onClick={handleCreateRigDialogSubmit}>Submit</Button>
-                        </Field>
                     </FieldGroup>
+                        
+                
+                    <div className="flex justify-between items-center mt-6">
+                        {validationErrors.length > 0 && (
+                            <ul className="text-destructive text-sm">
+                                {validationErrors.map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                ))}
+                            </ul>
+                        )}
+                        {requestErrors && (
+                            <p className="text-destructive text-sm">{requestErrors}</p>
+                        )}
+                        {isSuccess && (
+                            <p className="text-success text-sm">Rig created successfully!</p>
+                        )}
+
+                        {isSubmitting ? (
+                            <Button type="submit" disabled>
+                                Submitting...
+                            </Button>
+                        ) : (
+                            <Button type="submit">Submit</Button>
+                        )}
+                    </div>
                 </form>
-                {/* TODO: Add the rig form here */}
             </DialogContent>
         </Dialog>
     );
     
     
-    function handleCreateRigDialogSubmit() {
+    async function handleCreateRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        setValidationErrors([]);
+        setRequestErrors(null); 
+        setIsSubmitting(true);
+        setIsSuccess(false);
+
+        const validCompartments = compartments.map(compartment => ({
+            name: compartment.value.trim()
+        })).filter(compartment => compartment.name !== '');
+
+        const payload = {
+            name: name.trim(),
+            compartments: validCompartments
+        }
+
+        if (!payload.name) {
+            setValidationErrors(prev => [...prev, "Please enter a rig name."]);
+        }
+
+        if (payload.compartments.length === 0) {
+            setValidationErrors(prev => [...prev, "Please enter at least one compartment."]);
+        }
+        
+        try {
+            const response = await fetch('/api/rigs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.log(errorData)
+                setRequestErrors(errorData.error || "Request rejected from server.");
+            } else {
+                setIsSuccess(true);
+                setName("");
+                setCompartments([{clientId: crypto.randomUUID(), value: ""}]);
+                loadRigs()
+            }
+
+        } catch(error) {
+            console.error('Request failed to send: ', error)
+            setRequestErrors("Request failed to send.");
+        } finally {
+            setIsSubmitting(false);
+        }
+
         return console.log('coming soon.')
     }
-    
+
+    function handleRemoveCompartment(index: number) {
+        setCompartments(previousCompartments => previousCompartments.filter((_, currentIndex) => currentIndex !== index))
+    }
+
     function handleAddNewCompartment() {
         setCompartments(previousCompartments => [
             ...previousCompartments,
@@ -109,7 +203,11 @@ export function CreateRigDialog({
             }
         ])
     }
-    
+
+    function handleNameInputChange(value: string) {
+        setName(value);
+    }
+
     function handleNewCompartmentInputChange(index: number, value: string) {
         setCompartments(previousCompartments => previousCompartments.map( (compartment, currentIndex) => {
             return currentIndex === index ? {...compartment, value} : compartment
