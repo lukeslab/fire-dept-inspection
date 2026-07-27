@@ -7,8 +7,8 @@ import { RigCard } from "@/components/rigs/RigCard";
 
 import type { Rig } from "@/models/Rig";
 import { SpinnerButton } from "@/components/rigs/SpinnerButton";
-import { ErrorMessage } from "@/components/application/ErrorMessage";
 
+import { ErrorMessage } from "@/components/application/ErrorMessage";
 export default function RigList() {
     const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
     const [rigs, setRigs] = useState<Rig[]>([]);
