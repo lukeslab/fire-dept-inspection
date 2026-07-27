@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import type { Rig } from "@/models/Rig"
 
-export function RigCard({id, name}: Rig) {
+export function RigCard({ name }: Rig) {
 
     return (
     <Card className="w-full max-w-sm">

@@ -3,10 +3,11 @@ import { PageHeader } from "@/components/application/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { CreateRigDialog } from "@/components/rigs/CreateRigDialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { RigCard } from "@/components/rigs/RigCard";
 
 import type { Rig } from "@/models/Rig";
+import { SpinnerButton } from "@/components/rigs/SpinnerButton";
+import { ErrorMessage } from "@/components/application/ErrorMessage";
 
 export default function RigList() {
     const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
@@ -27,7 +28,8 @@ export default function RigList() {
                 setRigs(data);
                 console.log(data)
             } catch (err) {
-                console.error(err);
+                if (err instanceof Error) setError(err.message)
+                else setError("An unepected error occured.")
             } finally {
                 setIsLoading(false);
             }
@@ -48,9 +50,11 @@ export default function RigList() {
                     }
                 />
 
-                {rigs.map((rig) => {
+                {isLoading ? <SpinnerButton /> : 
+                    error ? <ErrorMessage message={error} /> : rigs.map((rig) => {
                     return (<RigCard key={rig.id} {...rig} />);
                 })}
+
             </AppPage>
 
             <CreateRigDialog
