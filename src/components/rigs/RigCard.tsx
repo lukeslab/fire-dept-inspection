@@ -66,7 +66,7 @@ export function RigCard({rig, onDeleteError, onDeleteSuccess }: RigCardProps) {
       const options = {
         method: "DELETE"
       }
-      const response = await fetch(`/api/rig?id=${rigId}`, options)
+      const response = await fetch(`/api/rigs?id=${rigId}`, options)
 
       if (!response.ok) {
         const error = await response.json()
