@@ -14,7 +14,8 @@ export default function RigList() {
     const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
     const [rigs, setRigs] = useState<Rig[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [loadRigsError, setLoadRigsError] = useState<string | null>(null);
+    const [deleteRigError, setDeleteRigError] = useState<string | null>(null);
 
     useEffect( () => {
 
@@ -23,6 +24,7 @@ export default function RigList() {
     return (
         <>
             <AppPage>
+                {deleteRigError && <ErrorMessage message={deleteRigError} />}
                 <PageHeader
                     title="Rigs"
                     description="Manage department apparatus and compartments."
@@ -34,9 +36,17 @@ export default function RigList() {
                 />
 
                 {isLoading ? <SpinnerButton /> : 
-                    error ? <ErrorMessage message={error} /> : rigs.map((rig) => {
-                    return (<RigCard key={rig.id} {...rig} />);
-                })}
+                    loadRigsError ? <ErrorMessage message={loadRigsError} /> : rigs.map((rig) => {
+
+                    return (<RigCard
+                                key={rig.id}
+                                rig={rig}
+                                onDeleteError={handleDeleteError}
+                                onDeleteSuccess={loadRigs}
+                            />);
+                    })
+                }
+
 
             </AppPage>
 
@@ -61,11 +71,14 @@ export default function RigList() {
             setRigs(data);
             console.log(data)
         } catch (err) {
-            if (err instanceof Error) setError(err.message)
-            else setError("An unepected error occured.")
+            if (err instanceof Error) setLoadRigsError(err.message)
+            else setLoadRigsError("An unepected error occured.")
         } finally {
             setIsLoading(false);
         }
     }
 
+    function handleDeleteError(message: string) {
+        setDeleteRigError(message);
+    }
 }
