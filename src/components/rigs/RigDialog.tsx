@@ -27,7 +27,8 @@ interface RigDialogProps {
     loadRigs: () => void;
 }
 
-interface NewCompartment {
+interface FormCompartment {
+    id?: string,
     clientId: string,
     value: string
 }
@@ -40,7 +41,7 @@ export function RigDialog({
     loadRigs
 }: RigDialogProps) {
 
-    const [compartments, setCompartments] = useState<NewCompartment[]>([{clientId: crypto.randomUUID(), value: ""}])
+    const [compartments, setCompartments] = useState<FormCompartment[]>([{clientId: crypto.randomUUID(), value: ""}])
     const [name, setName] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [validationErrors, setValidationErrors] = useState<string[]>([])
@@ -48,12 +49,12 @@ export function RigDialog({
     const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
     useEffect( () => {
-        if (mode && open && rigId) {
+        if (mode === 'edit' && open && rigId) {
             loadRig(rigId)
         }
     },[mode, open, rigId] )
 
-
+    console.log(compartments)
     return (
         <Dialog
             open={open}
@@ -146,12 +147,22 @@ export function RigDialog({
     
     async function loadRig(rigId) {
 
-    // const response = await fetch(`/api/rigs?id=${rigId}`)
-    // const data = await response.json()
+        const response = await fetch(`/api/rigs?id=${rigId}`)
 
+        if (!response.ok) {
+            setRequestErrors("Failed to get rig from server.")
+        } 
 
-        setName("Engine 240")
-        setCompartments([{ clientId: '1', value: "Driver Side 1"}, { clientId: '2', value: "Driver Side 2"}])
+        const [data] = await response.json()
+        console.log('data is ', data)
+        setName(data.rig_name)
+        setCompartments(
+            data.compartments.map((compartment: {id: string; name: string}) => ({
+                id: compartment.id,
+                clientId: crypto.randomUUID(),
+                value: compartment.name
+            }))
+        )
     }
 
     async function handleRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {

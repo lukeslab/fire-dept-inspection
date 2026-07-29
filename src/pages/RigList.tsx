@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AppPage } from "@/components/application/AppPage";
 import { PageHeader } from "@/components/application/PageHeader";
 import { Button } from "@/components/ui/button";
-import { CreateRigDialog } from "@/components/rigs/RigDialog";
+import { RigDialog } from "@/components/rigs/RigDialog";
 import { RigCard } from "@/components/rigs/RigCard";
 import { SpinnerButton } from "@/components/rigs/SpinnerButton";
 
@@ -50,7 +50,7 @@ export default function RigList() {
 
             </AppPage>
 
-            <CreateRigDialog
+            <RigDialog
                 mode='create'
                 open={isCreateDialogOpen}
                 onOpenChange={setCreateDialogOpen}

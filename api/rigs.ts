@@ -34,6 +34,11 @@ export default async function handler(
   try {
     switch (request.method) {
       case "GET":
+        if (request.query.id) {
+          console.log(request.query.id)
+          return await handleGetRigById(request, response)
+        }
+
         return await handleGetRigs(response);
 
       case "POST":
@@ -90,6 +95,33 @@ async function handleGetRigs(response: VercelResponse) {
   `;
 
   return response.status(200).json(rigs);
+}
+
+async function handleGetRigById(request: VercelRequest, response: VercelResponse) {
+  const rigId = request.query.id
+ 
+  const rig = await sql`
+    SELECT
+      r.id AS rig_id,
+      r.name AS rig_name,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', c.id,
+            'name', c.name
+          )
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::json
+      ) AS compartments
+    FROM rigs r
+    LEFT JOIN compartments c
+      ON c.rig_id = r.id
+    WHERE r.id = ${rigId}
+    GROUP BY r.id, r.name
+  `
+
+  return response.status(200).json(rig)
+  
 }
 
 async function handleCreateRig(
@@ -180,9 +212,6 @@ async function handleEditRig(
       error: "Rig name is required.",
     });
   }
-
-  
-
 }
 
 async function handleDeleteRig(
