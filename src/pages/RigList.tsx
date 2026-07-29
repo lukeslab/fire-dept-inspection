@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AppPage } from "@/components/application/AppPage";
 import { PageHeader } from "@/components/application/PageHeader";
 import { Button } from "@/components/ui/button";
-import { CreateRigDialog } from "@/components/rigs/CreateRigDialog";
+import { CreateRigDialog } from "@/components/rigs/RigDialog";
 import { RigCard } from "@/components/rigs/RigCard";
 import { SpinnerButton } from "@/components/rigs/SpinnerButton";
 
@@ -42,7 +42,7 @@ export default function RigList() {
                                 key={rig.id}
                                 rig={rig}
                                 onDeleteError={handleDeleteError}
-                                onDeleteSuccess={loadRigs}
+                                loadRigs={loadRigs}
                             />);
                     })
                 }
@@ -51,6 +51,7 @@ export default function RigList() {
             </AppPage>
 
             <CreateRigDialog
+                mode='create'
                 open={isCreateDialogOpen}
                 onOpenChange={setCreateDialogOpen}
                 loadRigs={loadRigs}

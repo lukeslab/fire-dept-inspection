@@ -21,6 +21,12 @@ type CreateRigBody = {
   compartments?: CompartmentInput[];
 };
 
+type EditRigBody = {
+  id: string;
+  name: string;
+  compartments?: CompartmentInput[]
+}
+
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -33,11 +39,14 @@ export default async function handler(
       case "POST":
         return await handleCreateRig(request, response);
 
+      case "PATCH":
+        return await handleEditRig(request, response);
+
       case "DELETE":
         return await handleDeleteRig(request, response);
 
       default:
-        response.setHeader("Allow", ["GET", "POST", "DELETE"]);
+        response.setHeader("Allow", ["GET", "POST", "PATCH", "DELETE"]);
 
         return response.status(405).json({
           error: `Method ${request.method} is not allowed.`,
@@ -156,6 +165,24 @@ async function handleCreateRig(
     ...rig,
     compartments: createdCompartments,
   });
+}
+
+async function handleEditRig(
+  request: VercelRequest,
+  response: VercelResponse
+) {
+  const body = request.body as EditRigBody | undefined
+
+  const name = body?.name?.trim();
+
+  if (!name) {
+    return response.status(400).json({
+      error: "Rig name is required.",
+    });
+  }
+
+  
+
 }
 
 async function handleDeleteRig(

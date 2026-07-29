@@ -10,23 +10,28 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import { RigDialog } from './RigDialog'
 import { DeleteRigDialog } from "@/components/rigs/DeleteRigDialog"
 
 import type { Rig } from "@/models/Rig"
 interface RigCardProps {
   rig: Rig;
   onDeleteError: (message: string) => void;
-  onDeleteSuccess: () => void;
+  loadRigs: () => void;
 }
 
-export function RigCard({rig, onDeleteError, onDeleteSuccess }: RigCardProps) {
+export function RigCard({rig, onDeleteError, loadRigs }: RigCardProps) {
 
     const [isDeleting, setIsDeleting] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
 
     return (
       <>
+
+        <RigDialog mode='edit' open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} rigId={rig.id} loadRigs={loadRigs}/>
+
         <DeleteRigDialog rig={rig} open={isConfirmOpen} onOpenChange={setIsConfirmOpen} deleteRig={deleteRig} />
 
         <Card className="w-full max-w-sm">
@@ -38,7 +43,11 @@ export function RigCard({rig, onDeleteError, onDeleteSuccess }: RigCardProps) {
           </CardHeader>
 
           <CardContent>
-            <Button>Edit</Button>
+            <Button
+              onClick={() => setIsEditDialogOpen(true)}
+            >
+              Edit
+            </Button>
             <Button
               onClick={() => setIsConfirmOpen(true)}
               variant="destructive"
@@ -73,7 +82,7 @@ export function RigCard({rig, onDeleteError, onDeleteSuccess }: RigCardProps) {
         throw new Error(error.error || "Server failed to delete rig.")
       }
 
-      await onDeleteSuccess()
+      await loadRigs()
 
     } catch (err) {
       if (err instanceof Error) {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -19,7 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
 import { PlusIcon, Trash2 } from 'lucide-react';
 
-interface CreateRigDialogProps {
+interface RigDialogProps {
+    mode: "edit" | "create",
+    rigId?: string,
     open: boolean;
     onOpenChange: (open: boolean) => void;
     loadRigs: () => void;
@@ -30,12 +32,13 @@ interface NewCompartment {
     value: string
 }
 
-
-export function CreateRigDialog({
+export function RigDialog({
+    mode,
     open,
+    rigId,
     onOpenChange,
     loadRigs
-}: CreateRigDialogProps) {
+}: RigDialogProps) {
 
     const [compartments, setCompartments] = useState<NewCompartment[]>([{clientId: crypto.randomUUID(), value: ""}])
     const [name, setName] = useState<string>("")
@@ -44,13 +47,20 @@ export function CreateRigDialog({
     const [requestErrors, setRequestErrors] = useState<string | null>(null)
     const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
+    useEffect( () => {
+        if (mode && open && rigId) {
+            loadRig(rigId)
+        }
+    },[mode, open, rigId] )
+
+
     return (
         <Dialog
             open={open}
             onOpenChange={onOpenChange}
         >
             <DialogContent className="overflow-y-auto max-h-[90vh]">
-                <form onSubmit={handleCreateRigDialogSubmit}>
+                <form onSubmit={handleRigDialogSubmit}>
                     <FieldGroup>
                         <FieldSet>
                             <FieldLegend>
@@ -118,7 +128,7 @@ export function CreateRigDialog({
                             <p className="text-destructive text-sm">{requestErrors}</p>
                         )}
                         {isSuccess && (
-                            <p className="text-success text-sm">Rig created successfully!</p>
+                            <p className="text-success text-sm">Rig {mode === 'edit' ? 'updated' : 'created'} successfully!</p>
                         )}
 
                         {isSubmitting ? (
@@ -134,8 +144,17 @@ export function CreateRigDialog({
         </Dialog>
     );
     
-    
-    async function handleCreateRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+    async function loadRig(rigId) {
+
+    // const response = await fetch(`/api/rigs?id=${rigId}`)
+    // const data = await response.json()
+
+
+        setName("Engine 240")
+        setCompartments([{ clientId: '1', value: "Driver Side 1"}, { clientId: '2', value: "Driver Side 2"}])
+    }
+
+    async function handleRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
         setValidationErrors([]);
@@ -160,14 +179,33 @@ export function CreateRigDialog({
             setValidationErrors(prev => [...prev, "Please enter at least one compartment."]);
         }
         
+
+        // This request will depend on the mode.
         try {
-            const response = await fetch('/api/rigs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            switch(mode){
+                case 'create':
+                    response = await fetch('/api/rigs', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    break;
+                case 'edit':
+                    response = await fetch('/api/rigs', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: rigId,
+                            ...payload
+                        })
+                    });
+                    break;
+            }
 
             if (!response.ok) {
                 const errorData = await response.json();
