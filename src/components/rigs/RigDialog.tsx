@@ -40,7 +40,7 @@ export function RigDialog({
     onOpenChange,
     loadRigs
 }: RigDialogProps) {
-
+    
     const [compartments, setCompartments] = useState<FormCompartment[]>([{clientId: crypto.randomUUID(), value: ""}])
     const [name, setName] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -65,10 +65,10 @@ export function RigDialog({
                     <FieldGroup>
                         <FieldSet>
                             <FieldLegend>
-                                Create New Rig
+                                {mode === 'create' ? 'Create New' : 'Edit'} Rig
                             </FieldLegend>
                             <FieldDescription>
-                                Enter new apparatus name and its compartments.
+                                {mode === 'create' ? 'Enter new' : 'Change'} apparatus name and its compartments.
                             </FieldDescription>
                             <FieldGroup>
                                 <Field>
@@ -145,7 +145,7 @@ export function RigDialog({
         </Dialog>
     );
     
-    async function loadRig(rigId) {
+    async function loadRig(rigId: string) {
 
         const response = await fetch(`/api/rigs?id=${rigId}`)
 
@@ -154,7 +154,7 @@ export function RigDialog({
         } 
 
         const [data] = await response.json()
-        console.log('data is ', data)
+        setValidationErrors([])
         setName(data.rig_name)
         setCompartments(
             data.compartments.map((compartment: {id: string; name: string}) => ({
@@ -174,6 +174,7 @@ export function RigDialog({
         setIsSuccess(false);
 
         const validCompartments = compartments.map(compartment => ({
+            id: compartment.id,
             name: compartment.value.trim()
         })).filter(compartment => compartment.name !== '');
 
@@ -184,12 +185,15 @@ export function RigDialog({
 
         if (!payload.name) {
             setValidationErrors(prev => [...prev, "Please enter a rig name."]);
+            setIsSubmitting(false)
+            return
         }
 
         if (payload.compartments.length === 0) {
             setValidationErrors(prev => [...prev, "Please enter at least one compartment."]);
+            setIsSubmitting(false)
+            return
         }
-        
 
         // This request will depend on the mode.
         try {
@@ -240,6 +244,10 @@ export function RigDialog({
     }
 
     function handleRemoveCompartment(index: number) {
+        if (compartments.length == 1) {
+            setValidationErrors(['You must have atleast one compartment'])
+            return
+        }
         setCompartments(previousCompartments => previousCompartments.filter((_, currentIndex) => currentIndex !== index))
     }
 

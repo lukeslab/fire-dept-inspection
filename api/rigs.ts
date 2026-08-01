@@ -12,6 +12,7 @@ if (!databaseUrl) {
 const sql = neon(databaseUrl);
 
 type CompartmentInput = {
+  id?: string;
   name: string;
   position?: number;
 };
@@ -35,7 +36,6 @@ export default async function handler(
     switch (request.method) {
       case "GET":
         if (request.query.id) {
-          console.log(request.query.id)
           return await handleGetRigById(request, response)
         }
 
@@ -161,41 +161,11 @@ async function handleCreateRig(
       created_at;
   `;
 
-  const createdCompartments: Compartment[] = [];
-
-  for (const [index, compartment] of compartments.entries()) {
-    const compartmentName = compartment.name?.trim();
-
-    if (!compartmentName) {
-      continue;
-    }
-
-    const position = compartment.position ?? index;
-
-    const [createdCompartment] = (await sql`
-    INSERT INTO compartments (
-        rig_id,
-        name,
-        position
-    )
-    VALUES (
-        ${rig.id},
-        ${compartmentName},
-        ${position}
-    )
-    RETURNING
-        id,
-        rig_id AS "rigId",
-        name,
-        position;
-`) as Compartment[];
-
-    createdCompartments.push(createdCompartment);
-  }
+  const insertedCompartments = insertCompartments(rig.id, compartments)
 
   return response.status(201).json({
     ...rig,
-    compartments: createdCompartments,
+    compartments: insertedCompartments,
   });
 }
 
@@ -204,14 +174,78 @@ async function handleEditRig(
   response: VercelResponse
 ) {
   const body = request.body as EditRigBody | undefined
-
-  const name = body?.name?.trim();
+  console.log('editing')
+  const id = body?.id
+  const name = body?.name.trim()
+  const compartments = body?.compartments
 
   if (!name) {
     return response.status(400).json({
       error: "Rig name is required.",
     });
   }
+
+  // Check if the name exists on all other rig
+  const queryOtherRigs = await sql`
+    SELECT name
+    FROM rigs
+    WHERE LOWER(name) = LOWER(${name})
+      AND id <> ${id}
+    LIMIT 1;
+  `;
+
+  if (queryOtherRigs.length > 0) {
+    return response.status(409).json({
+      error: 'A rig with that name already exists.'
+    })
+  }
+
+  // If the name is different from the current name AND does not already exist, update the current name.
+
+  const querySelectedRig = await sql`
+    SELECT name
+    FROM rigs
+    WHERE id = ${id}
+  `
+  const [currentRig] = querySelectedRig
+
+  if (!currentRig) {
+    return response.status(404).json({
+      error: "Rig not found."
+    })
+  }
+
+  if (currentRig.name !== name) {
+    await sql`
+      UPDATE rigs
+      SET name = ${name}
+      WHERE id = ${id}
+    `
+  }
+  
+  const newCompartments = compartments?.filter(compartment => !compartment.id)
+  if (id && newCompartments) insertCompartments(id, newCompartments)
+  
+  const existingCompartments = compartments?.filter(compartment => compartment.id)
+  if (existingCompartments) updateCompartments(existingCompartments)
+  
+  const compartmentsInDatabase = (await sql`
+    SELECT id
+    FROM compartments
+    WHERE rig_id = ${id}
+  `) as Compartment[]
+  // const setCompartments = new Set(existingCompartments)
+  const deletedCompartments = compartmentsInDatabase.filter( compartmentInDB => {
+    return !existingCompartments?.find( existingCompartment => {
+      return existingCompartment.id == compartmentInDB.id
+    })
+  })
+
+  if (deletedCompartments) deleteCompartments(deletedCompartments)
+  console.log(deletedCompartments)
+
+  return response.status(201).json({ message: "Updated successfully." })
+
 }
 
 async function handleDeleteRig(
@@ -245,4 +279,63 @@ async function handleDeleteRig(
     deleted: true,
     rig: deletedRigs[0],
   });
+}
+
+async function insertCompartments(rigId: string, compartments: CompartmentInput[]) {
+  const insertedCopmartments: Compartment[] = [];
+
+  for (const [index, compartment] of compartments.entries()) {
+    const compartmentName = compartment.name?.trim();
+
+    if (!compartmentName) {
+      continue;
+    }
+
+    const position = compartment.position ?? index;
+
+    const [insertedCompartment] = (await sql`
+    INSERT INTO compartments (
+        rig_id,
+        name,
+        position
+    )
+    VALUES (
+        ${rigId},
+        ${compartmentName},
+        ${position}
+    )
+    RETURNING
+        id,
+        rig_id AS "rigId",
+        name,
+        position;
+`) as Compartment[];
+
+    insertedCopmartments.push(insertedCompartment);
+  }
+}
+
+async function updateCompartments(compartments: CompartmentInput[]) {
+
+  for (const compartment of compartments) {
+    if (!compartment.name) continue
+
+    await sql`
+      UPDATE compartments
+      SET name = ${compartment.name}
+      WHERE id = ${compartment.id}
+    `
+  }
+  
+}
+
+async function deleteCompartments(compartments: CompartmentInput[]) {
+  
+  for ( const compartment of compartments) {
+    await sql`
+      DELETE FROM compartments
+      WHERE id = ${compartment.id}
+    `
+  }
+  
 }
