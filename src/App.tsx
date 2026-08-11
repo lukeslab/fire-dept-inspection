@@ -7,6 +7,7 @@ import {
 import { AppLayout } from "@/components/layout/AppLayout";
 import RigList from "@/pages/RigList";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import EquipmentList from "./pages/EquipmentList";
 
 export default function App() {
   return (
@@ -27,12 +28,7 @@ export default function App() {
 
           <Route
             path="equipment"
-            element={
-              <PlaceholderPage
-                title="Equipment"
-                description="Manage department equipment and assignments."
-              />
-            }
+            element={<EquipmentList />}
           />
 
           <Route

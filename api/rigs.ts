@@ -161,7 +161,7 @@ async function handleCreateRig(
       created_at;
   `;
 
-  const insertedCompartments = insertCompartments(rig.id, compartments)
+  const insertedCompartments = await insertCompartments(rig.id, compartments)
 
   return response.status(201).json({
     ...rig,
@@ -317,12 +317,14 @@ async function insertCompartments(rigId: string, compartments: CompartmentInput[
 
 async function updateCompartments(compartments: CompartmentInput[]) {
 
-  for (const compartment of compartments) {
+  for (const [index, compartment] of compartments.entries()) {
     if (!compartment.name) continue
 
     await sql`
       UPDATE compartments
-      SET name = ${compartment.name}
+      SET 
+        name = ${compartment.name},
+        position = ${compartment.position ?? index}
       WHERE id = ${compartment.id}
     `
   }
