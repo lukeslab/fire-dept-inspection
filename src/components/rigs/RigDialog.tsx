@@ -11,13 +11,16 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-//   FieldSeparator,
+  FieldSeparator,
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
 import { PlusIcon, Trash2 } from 'lucide-react';
+
+import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
+import { Separator } from '../ui/separator';
 
 interface RigDialogProps {
     mode: "edit" | "create",
@@ -62,59 +65,70 @@ export function RigDialog({
         >
             <DialogContent className="overflow-y-auto max-h-[90vh]">
                 <form onSubmit={handleRigDialogSubmit}>
-                    <FieldGroup>
+                    <FieldSet>
+                        <FieldLegend>
+                            {mode === 'create' ? 'Create New' : 'Edit'} Rig
+                        </FieldLegend>
+                        <FieldDescription>
+                            {mode === 'create' ? 'Enter new' : 'Change'} apparatus name and its compartments.
+                        </FieldDescription>
+                        
+                        <FieldGroup>
+                            <Field orientation="horizontal">
+                                <FieldLabel htmlFor="name">Name</FieldLabel>
+                                <Input 
+                                    id="name" 
+                                    placeholder="Engine 240" 
+                                    value={name}
+                                    onChange={event => handleNameInputChange(event.target.value)}
+                                />
+                            </Field>
+                        </FieldGroup>
+               
+                        <FieldSeparator />
                         <FieldSet>
-                            <FieldLegend>
-                                {mode === 'create' ? 'Create New' : 'Edit'} Rig
-                            </FieldLegend>
-                            <FieldDescription>
-                                {mode === 'create' ? 'Enter new' : 'Change'} apparatus name and its compartments.
-                            </FieldDescription>
-                            <FieldGroup>
-                                <Field>
-                                    <FieldLabel htmlFor="name">Name</FieldLabel>
-                                    <Input 
-                                        id="name" 
-                                        placeholder="Engine 240" 
-                                        value={name}
-                                        onChange={event => handleNameInputChange(event.target.value)}
-                                    />
-                                </Field>
-                            </FieldGroup>
-                        </FieldSet>
-                        <FieldSet>
-                            <FieldLegend>Add Compartments</FieldLegend>
-                            <FieldDescription> 
-                                Enter compartment name into the box. Click new compartment to add more. 
-                            </FieldDescription>
-                            <FieldGroup>
-
-                        {compartments.map( (compartment, index) => {
+                            <FieldLegend>Compartments</FieldLegend>
+                            <FieldDescription>Compartments are broken into various groups. Each group must have atleast one compartment.</FieldDescription>
+                            
+                        {COMPARTMENT_GROUPS.map( (group) => {
                             return (
-                                <Field key={compartment.clientId} orientation="horizontal">
-                                    <FieldLabel htmlFor={`c-${index}`}>{index+1} </FieldLabel>
-                                    <Input 
-                                        id={`c-${index}`} 
-                                        placeholder="e.x. Driver Side Cab, Front Bumper, Offer Side Cab" 
-                                        value={compartment?.value} 
-                                        onChange={event => handleNewCompartmentInputChange(index, event.target.value)}    
-                                    />
-                                    <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(index)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </Field>
+                                <> 
+                                    <FieldGroup>
+                                        <FieldLegend >{`- ${group.label}`}</FieldLegend>
+
+                                    {compartments.map( (compartment, index) => {
+                                        return (
+                                            <Field key={compartment.clientId} orientation="horizontal">
+                                                <FieldLabel htmlFor={`c-${index}`}>{index+1} </FieldLabel>
+                                                <Input 
+                                                    id={`c-${index}`} 
+                                                    placeholder="e.x. Driver Side Cab, Front Bumper, Offer Side Cab" 
+                                                    value={compartment?.value} 
+                                                    onChange={event => handleNewCompartmentInputChange(index, event.target.value)}    
+                                                />
+                                                <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </Field>
+                                        )
+                                    })}
+                                    </FieldGroup>
+                                    <FieldGroup>
+                                        <Field orientation="horizontal">
+                                            <Button type="button" variant="outline" onClick={handleAddNewCompartment}>
+                                                <PlusIcon 
+                                                    className="h-4 w-4" /> Add Compartment
+                                            </Button>
+                                        </Field>
+                                    </FieldGroup>
+                                </>
+
                             )
                         })}
 
-                                <Field orientation="horizontal">
-                                    <Button type="button" variant="outline" onClick={handleAddNewCompartment}>
-                                        <PlusIcon 
-                                            className="h-4 w-4" /> Add Compartment
-                                    </Button>
-                                </Field>
-                            </FieldGroup>
+                       
                         </FieldSet>
-                    </FieldGroup>
+                    </FieldSet>
                         
                 
                     <div className="flex justify-between items-center mt-6">
