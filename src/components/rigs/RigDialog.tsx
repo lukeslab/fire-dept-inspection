@@ -112,7 +112,7 @@ export function RigDialog({
                                                     id={`c-${index}`} 
                                                     placeholder="e.x. Driver Side Cab, Front Bumper, Offer Side Cab" 
                                                     value={compartment?.name} 
-                                                    onChange={event => handleNewCompartmentInputChange(index, event.target.value)}    
+                                                    onChange={event => handleNewCompartmentInputChange(compartment.reactKey, event.target.value)}    
                                                 />
                                                 <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(compartment.reactKey)}>
                                                     <Trash2 className="h-4 w-4" />
@@ -288,9 +288,10 @@ export function RigDialog({
         setName(value);
     }
 
-    function handleNewCompartmentInputChange(index: number, value: string) {
-        setCompartments(previousCompartments => previousCompartments.map( (compartment, currentIndex) => {
-            return currentIndex === index ? {...compartment, value} : compartment
+    function handleNewCompartmentInputChange(reactKey: string, name: string) {
+        setCompartments(previousCompartments => previousCompartments.map( (compartment) => {
+            console.log('comp', compartment, reactKey)
+            return compartment.reactKey === reactKey ? {...compartment, name} : compartment
         }))
     }
 }
