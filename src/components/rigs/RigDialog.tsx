@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 import { PlusIcon, Trash2 } from 'lucide-react';
 
 import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
-import { Separator } from '../ui/separator';
+// import { Separator } from '../ui/separator';
 
 interface RigDialogProps {
     mode: "edit" | "create",
@@ -31,11 +31,14 @@ interface RigDialogProps {
 }
 
 interface ReactFormCompartment {
-    group_key: string,
     id?: string,
     reactKey: string,
-    name: string
+    name: string,
+    position: number
 }
+
+type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
+type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
 
 export function RigDialog({
     mode,
@@ -44,15 +47,19 @@ export function RigDialog({
     onOpenChange,
     loadRigs
 }: RigDialogProps) {
+
+    const initialCompartments = COMPARTMENT_GROUPS.reduce( (acc, group) => {
+        acc[group.key] = [
+            {
+                reactKey: crypto.randomUUID(), 
+                name: "", 
+                position: 1
+            }
+        ]
+        return acc
+    }, {} as CompartmentsState)
     
-    const [compartments, setCompartments] = useState<ReactFormCompartment[]>(
-        () => COMPARTMENT_GROUPS.map( group => ({
-                reactKey: crypto.randomUUID(),
-                group_key: group.key,
-                name: "",
-                position: 0
-        }))
-    )
+    const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
     const [name, setName] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [validationErrors, setValidationErrors] = useState<string[]>([])
@@ -104,17 +111,17 @@ export function RigDialog({
                                     <FieldGroup>
                                         <FieldLegend >{`- ${group.label}`}</FieldLegend>
 
-                                    {compartments.filter(compartment => compartment.group_key === group.key).map( (compartment, index,) => {
+                                    {compartments[group.key].map( (compartment) => {
                                         return (
                                             <Field key={compartment.reactKey} orientation="horizontal">
-                                                <FieldLabel htmlFor={`c-${index}`}>{index+1} </FieldLabel>
+                                                <FieldLabel htmlFor={compartment.reactKey}>{compartment.position} </FieldLabel>
                                                 <Input 
-                                                    id={`c-${index}`} 
-                                                    placeholder="e.x. Driver Side Cab, Front Bumper, Offer Side Cab" 
+                                                    id={compartment.reactKey} 
+                                                    placeholder={group.placeholder} 
                                                     value={compartment?.name} 
-                                                    onChange={event => handleNewCompartmentInputChange(compartment.reactKey, event.target.value)}    
+                                                    onChange={event => handleNewCompartmentInputChange(compartment.reactKey, group.key, event.target.value)}    
                                                 />
-                                                <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(compartment.reactKey)}>
+                                                <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(compartment.reactKey, group.key)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </Field>
@@ -195,10 +202,11 @@ export function RigDialog({
         setIsSubmitting(true);
         setIsSuccess(false);
 
-        const validCompartments = compartments.map(compartment => ({
-            id: compartment.id,
+        const validCompartments = compartments.filter(compartment => compartment.name.trim() !== '').map(compartment => ({
+            id: compartment?.id,
+            group_key: compartment.group_key,
             name: compartment.name.trim()
-        })).filter(compartment => compartment.name !== '');
+        }))
 
         const payload = {
             name: name.trim(),
@@ -265,33 +273,50 @@ export function RigDialog({
         return console.log('coming soon.')
     }
 
-    function handleRemoveCompartment(reactKey: string) {
-        if (compartments.length == 1) {
+    function handleRemoveCompartment(reactKey: string, groupKey: CompartmentGroupKey) {
+        if (compartments[groupKey].length == 1) {
             setValidationErrors(['You must have atleast one compartment'])
             return
         }
-        setCompartments(previousCompartments => previousCompartments.filter((compartment) => compartment.reactKey !== reactKey))
+
+        setCompartments( previousCompartments => ({
+            ...previousCompartments,
+            [groupKey]: previousCompartments[groupKey]
+            .filter((compartment) => compartment.reactKey !== reactKey)
+            .map((compartment, index) => ({
+                ...compartment,
+                position: index + 1
+            }))
+        }))
     }
 
-    function handleAddNewCompartment(groupKey: string) {
-        setCompartments(previousCompartments => [
+    function handleAddNewCompartment(groupKey: CompartmentGroupKey) {
+
+        const lastPosition = compartments[groupKey].length
+
+        setCompartments(previousCompartments => ({
             ...previousCompartments,
-            {
-                group_key: groupKey,
-                reactKey: crypto.randomUUID(),
-                name: ''
-            }
-        ])
+            [groupKey]: [
+                ...previousCompartments[groupKey], 
+                {
+                    reactKey: crypto.randomUUID(),
+                    name: '',
+                    position: lastPosition + 1
+                }
+            ]
+        }))
     }
 
     function handleNameInputChange(value: string) {
         setName(value);
     }
 
-    function handleNewCompartmentInputChange(reactKey: string, name: string) {
-        setCompartments(previousCompartments => previousCompartments.map( (compartment) => {
-            console.log('comp', compartment, reactKey)
-            return compartment.reactKey === reactKey ? {...compartment, name} : compartment
+    function handleNewCompartmentInputChange(reactKey: string, groupKey: CompartmentGroupKey, name: string) {
+        setCompartments(previousCompartments => ({
+            ...previousCompartments,
+            [groupKey]: previousCompartments[groupKey].map((compartment) => {
+                return compartment.reactKey === reactKey ? {...compartment, name} : compartment
+            })
         }))
     }
 }
