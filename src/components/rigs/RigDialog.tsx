@@ -202,15 +202,18 @@ export function RigDialog({
         setIsSubmitting(true);
         setIsSuccess(false);
 
-        const validCompartments = compartments.filter(compartment => compartment.name.trim() !== '').map(compartment => ({
-            id: compartment?.id,
-            group_key: compartment.group_key,
-            name: compartment.name.trim()
-        }))
+        const flatCompartments = Object.entries(compartments).flatMap( ([groupKey, groupCompartments]) => 
+            groupCompartments.map(compartment => (
+                {
+                    ...compartment,
+                    group_key: groupKey
+                }
+            )
+        ))
 
         const payload = {
             name: name.trim(),
-            compartments: validCompartments
+            compartments: flatCompartments
         }
 
         if (!payload.name) {
@@ -259,7 +262,7 @@ export function RigDialog({
             } else {
                 setIsSuccess(true);
                 setName("");
-                setCompartments([{reactKey: crypto.randomUUID(), value: ""}]);
+                setCompartments(initialCompartments);
                 loadRigs()
             }
 

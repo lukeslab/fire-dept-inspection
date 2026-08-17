@@ -1,5 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 
+import { COMPARTMENT_GROUPS } from "../src/lib/db/compartmentGroups.ts";
+
 import type { Compartment } from "../src/models/Compartment.ts";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
@@ -11,10 +13,12 @@ if (!databaseUrl) {
 
 const sql = neon(databaseUrl);
 
+type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
 type CompartmentInput = {
   id?: string;
   name: string;
-  position?: number;
+  position: number;
+  group_key: CompartmentGroupKey;
 };
 
 type CreateRigBody = {
@@ -161,7 +165,7 @@ async function handleCreateRig(
       created_at;
   `;
 
-  const insertedCompartments = insertCompartments(rig.id, compartments)
+  const insertedCompartments = await insertCompartments(rig.id, compartments);
 
   return response.status(201).json({
     ...rig,
@@ -241,7 +245,7 @@ async function handleEditRig(
     })
   })
 
-  if (deletedCompartments) deleteCompartments(deletedCompartments)
+  if (deletedCompartments) await deleteCompartments(deletedCompartments)
   console.log(deletedCompartments)
 
   return response.status(201).json({ message: "Updated successfully." })
@@ -281,38 +285,41 @@ async function handleDeleteRig(
   });
 }
 
-async function insertCompartments(rigId: string, compartments: CompartmentInput[]) {
-  const insertedCopmartments: Compartment[] = [];
+async function insertCompartments(rigId: string, compartments: CompartmentInput[]): Promise<Compartment[]> {
+  const insertedCompartments: Compartment[] = [];
 
-  for (const [index, compartment] of compartments.entries()) {
+  for (const compartment of compartments) {
     const compartmentName = compartment.name?.trim();
 
     if (!compartmentName) {
       continue;
     }
 
-    const position = compartment.position ?? index;
-
     const [insertedCompartment] = (await sql`
-    INSERT INTO compartments (
-        rig_id,
-        name,
-        position
-    )
-    VALUES (
-        ${rigId},
-        ${compartmentName},
-        ${position}
-    )
-    RETURNING
-        id,
-        rig_id AS "rigId",
-        name,
-        position;
-`) as Compartment[];
+      INSERT INTO compartments (
+          rig_id,
+          name,
+          position,
+          group_key
+      )
+      VALUES (
+          ${rigId},
+          ${compartmentName},
+          ${compartment.position},
+          ${compartment.group_key}
+      )
+      RETURNING
+          id,
+          rig_id AS "rigId",
+          name,
+          position,
+          group_key AS "groupKey";
+    `) as Compartment[];
 
-    insertedCopmartments.push(insertedCompartment);
+    insertedCompartments.push(insertedCompartment);
   }
+  
+  return insertedCompartments;
 }
 
 async function updateCompartments(compartments: CompartmentInput[]) {
