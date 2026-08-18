@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
 import { PlusIcon, Trash2 } from 'lucide-react';
-
+import type { Compartment } from "@/models/Compartment"
 import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
 // import { Separator } from '../ui/separator';
 
@@ -71,6 +71,15 @@ export function RigDialog({
             loadRig(rigId)
         }
     },[mode, open, rigId] )
+
+
+    // Clean up success / fail messaging on dialog close.
+    useEffect( () => {
+        ( async () => {
+            setValidationErrors([])
+            setIsSuccess(false)
+        })()
+    }, [open])
 
     console.log(compartments)
     return (
@@ -183,15 +192,26 @@ export function RigDialog({
         } 
 
         const [data] = await response.json()
+
+        const retrievedCompartments = data.compartments.reduce(
+            (acc: CompartmentsState, compartment: Compartment) => {
+                if (!acc[compartment.group_key]) {
+                    acc[compartment.group_key] = []
+                }
+                acc[compartment.group_key].push({
+                    id: compartment.id,
+                    reactKey: crypto.randomUUID(),
+                    name: compartment.name,
+                    position: compartment.position
+                })
+                return acc
+            }, 
+            {} as CompartmentsState
+        )
+
         setValidationErrors([])
         setName(data.rig_name)
-        setCompartments(
-            data.compartments.map((compartment: {id: string; name: string}) => ({
-                id: compartment.id,
-                reactKey: crypto.randomUUID(),
-                name: compartment.name
-            }))
-        )
+        setCompartments(retrievedCompartments)
     }
 
     async function handleRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {

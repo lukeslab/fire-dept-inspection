@@ -29,7 +29,7 @@ type CreateRigBody = {
 type EditRigBody = {
   id: string;
   name: string;
-  compartments?: CompartmentInput[]
+  compartments: CompartmentInput[]
 }
 
 export default async function handler(
@@ -112,8 +112,11 @@ async function handleGetRigById(request: VercelRequest, response: VercelResponse
         json_agg(
           json_build_object(
             'id', c.id,
-            'name', c.name
+            'name', c.name,
+            'position', c.position,
+            'group_key', c.group_key
           )
+          ORDER BY c.position
         ) FILTER (WHERE c.id IS NOT NULL),
         '[]'::json
       ) AS compartments
@@ -177,12 +180,11 @@ async function handleEditRig(
   request: VercelRequest,
   response: VercelResponse
 ) {
-  const body = request.body as EditRigBody | undefined
-  console.log('editing')
-  const id = body?.id
+  const body = request.body as EditRigBody
+  const id = body.id
   const name = body?.name.trim()
   const compartments = body?.compartments
-
+  
   if (!name) {
     return response.status(400).json({
       error: "Rig name is required.",
@@ -227,26 +229,11 @@ async function handleEditRig(
     `
   }
   
-  const newCompartments = compartments?.filter(compartment => !compartment.id)
-  if (id && newCompartments) insertCompartments(id, newCompartments)
+  await deleteCompartments(id, compartments)
   
-  const existingCompartments = compartments?.filter(compartment => compartment.id)
-  if (existingCompartments) updateCompartments(existingCompartments)
+  await insertCompartments(id, compartments)
   
-  const compartmentsInDatabase = (await sql`
-    SELECT id
-    FROM compartments
-    WHERE rig_id = ${id}
-  `) as Compartment[]
-  // const setCompartments = new Set(existingCompartments)
-  const deletedCompartments = compartmentsInDatabase.filter( compartmentInDB => {
-    return !existingCompartments?.find( existingCompartment => {
-      return existingCompartment.id == compartmentInDB.id
-    })
-  })
-
-  if (deletedCompartments) await deleteCompartments(deletedCompartments)
-  console.log(deletedCompartments)
+  await updateCompartments(compartments)
 
   return response.status(201).json({ message: "Updated successfully." })
 
@@ -286,14 +273,11 @@ async function handleDeleteRig(
 }
 
 async function insertCompartments(rigId: string, compartments: CompartmentInput[]): Promise<Compartment[]> {
+  
+  const newCompartments = compartments.filter(compartment => !compartment.id && compartment.name)
+    
   const insertedCompartments: Compartment[] = [];
-
-  for (const compartment of compartments) {
-    const compartmentName = compartment.name?.trim();
-
-    if (!compartmentName) {
-      continue;
-    }
+  for (const compartment of newCompartments) {
 
     const [insertedCompartment] = (await sql`
       INSERT INTO compartments (
@@ -304,7 +288,7 @@ async function insertCompartments(rigId: string, compartments: CompartmentInput[
       )
       VALUES (
           ${rigId},
-          ${compartmentName},
+          ${compartment.name.trim()},
           ${compartment.position},
           ${compartment.group_key}
       )
@@ -317,14 +301,16 @@ async function insertCompartments(rigId: string, compartments: CompartmentInput[
     `) as Compartment[];
 
     insertedCompartments.push(insertedCompartment);
+
   }
   
   return insertedCompartments;
 }
 
 async function updateCompartments(compartments: CompartmentInput[]) {
+  const existingCompartments = compartments?.filter(compartment => compartment.id)
 
-  for (const compartment of compartments) {
+  for (const compartment of existingCompartments) {
     if (!compartment.name) continue
 
     await sql`
@@ -336,13 +322,25 @@ async function updateCompartments(compartments: CompartmentInput[]) {
   
 }
 
-async function deleteCompartments(compartments: CompartmentInput[]) {
+async function deleteCompartments(rigId: string, compartments: CompartmentInput[]): Promise<void> {
   
-  for ( const compartment of compartments) {
+  const existingCompartments = compartments?.filter(compartment => compartment.id)
+  const compartmentsInDatabase = (await sql`
+    SELECT id
+    FROM compartments
+    WHERE rig_id = ${rigId}
+  `) as Compartment[]
+  
+  const deletedCompartments = compartmentsInDatabase.filter( compartmentInDB => {
+    return !existingCompartments?.find( existingCompartment => {
+      return existingCompartment.id == compartmentInDB.id
+    })
+  })
+
+  for ( const compartment of deletedCompartments) {
     await sql`
       DELETE FROM compartments
       WHERE id = ${compartment.id}
     `
   }
-  
 }
