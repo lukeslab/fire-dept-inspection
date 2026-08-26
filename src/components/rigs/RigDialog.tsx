@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 
+import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
@@ -11,12 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
 
+import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
+
+import type { Rig } from "@/models/Rig"
+
 import { RigDialogCompartmentsTab } from './RigDialogCompartmentsTab';
 import { RigDialogInfoTab } from './RigDialogInfoTab';
 
-import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
-
-import type { Compartment } from "@/models/Compartment"
 interface RigDialogProps {
     mode: "create" | "view",
     rigId?: string,
@@ -44,24 +46,27 @@ export function RigDialog({
     loadRigs
 }: RigDialogProps) {
 
-    const initialCompartments = COMPARTMENT_GROUPS.reduce( (acc, group) => {
-        acc[group.key] = [
-            {
-                reactKey: crypto.randomUUID(), 
-                name: "", 
-                position: 1
-            }
-        ]
-        return acc
-    }, {} as CompartmentsState)
+    // const initialCompartments = COMPARTMENT_GROUPS.reduce( (acc, group) => {
+    //     acc[group.key] = [
+    //         {
+    //             reactKey: crypto.randomUUID(), 
+    //             name: "", 
+    //             position: 1
+    //         }
+    //     ]
+    //     return acc
+    // }, {} as CompartmentsState)
     
     const [dialogTab, setDialogTab] = useState<DialogTab>('info')
     const [dialogMode, setDialogMode] = useState<"create" | "view" | "edit">(mode)
 
-    const [rig, setRig] = useState({})
-    const [name, setName] = useState<string>("")
-    const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
+    const [rigIsLoading, setRigIsLoading] = useState(true);
+    const [rig, setRig] = useState<Rig>()
+    // const [name, setName] = useState<string>("")
     
+    // const [deleteDialogIsOpen, setDeleteDialogIsOpen] = useState(false)
+    // const [isDeleting, setIsDeleting] = useState(false)
+
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [validationErrors, setValidationErrors] = useState<string[]>([])
     const [requestErrors, setRequestErrors] = useState<string | null>(null)
@@ -84,55 +89,74 @@ export function RigDialog({
 
     // console.log(compartments)
     return (
+        <>
         <Dialog
             open={open}
             onOpenChange={onOpenChange}
-        >     
-            <DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">
-                <DialogHeader>
-                    <DialogTitle>
-                        {dialogMode === 'create' ? 'Add New Rig' : dialogMode === 'edit' ? `Edit Rig: ${name}` : `View Rig: ${name}`}
-                    </DialogTitle>
-                </DialogHeader>
-              
-                <Tabs defaultValue="info" onValueChange={(value) => setDialogTab(value)}>
-                    <TabsList variant="line">
-                        <TabsTrigger value="info">Info</TabsTrigger>
-                        <TabsTrigger value="compartments">Compartments</TabsTrigger>
-                        <TabsTrigger value="equipment">Equipment</TabsTrigger>
-                    </TabsList>
-                </Tabs>
+        >   
+            <DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">  
+                {rigIsLoading ? <Spinner /> :
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {dialogMode === 'create' ? 'Add New Rig' : dialogMode === 'edit' ? `Edit Rig: ${rig.name}` : `View Rig: ${rig.name}`}
+                            </DialogTitle>
+                        </DialogHeader>
+                    
+                        <Tabs defaultValue="info" onValueChange={(value) => setDialogTab(value)}>
+                            <TabsList variant="line">
+                                <TabsTrigger value="info">Info</TabsTrigger>
+                                <TabsTrigger value="compartments">Compartments</TabsTrigger>
+                                <TabsTrigger value="equipment">Equipment</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
 
-                <form onSubmit={handleRigDialogSubmit}>
-                    <div className=" items-center mt-6">
+                        <form id="RigDialogForm" onSubmit={handleRigDialogSubmit}>
+                            <div className=" items-center mt-6">
 
-                        {dialogTab === 'info' ? <RigDialogInfoTab mode={dialogMode} rig={rig} /> : 'test'}
+                                {dialogTab === 'info' && <RigDialogInfoTab mode={dialogMode} rig={rig} /> } 
 
-                        {validationErrors.length > 0 && (
-                            <ul className="text-destructive text-sm">
-                                {validationErrors.map((error, index) => (
-                                    <li key={index}>{error}</li>
-                                ))}
-                            </ul>
-                        )}
-                        {requestErrors && (
-                            <p className="text-destructive text-sm">{requestErrors}</p>
-                        )}
-                        {isSuccess && (
-                            <p className="text-success text-sm">Rig {mode === 'edit' ? 'updated' : 'created'} successfully!</p>
-                        )}
+                                {dialogTab === 'compartments' && <RigDialogCompartmentsTab mode={dialogMode} rig={rig} />}
 
-                        {isSubmitting ? (
-                            <Button type="submit" disabled>
-                                Submitting...
-                            </Button>
-                        ) : (
-                            <Button type="submit">Submit</Button>
-                        )}
-                    </div>
-                </form>
+                                {/* {dialogTab === 'equipment' && <RigDialogEquipmentTab />} */}
+
+                                {validationErrors.length > 0 && (
+                                    <ul className="text-destructive text-sm">
+                                        {validationErrors.map((error, index) => (
+                                            <li key={index}>{error}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                                {requestErrors && (
+                                    <p className="text-destructive text-sm">{requestErrors}</p>
+                                )}
+                                {isSuccess && (
+                                    <p className="text-success text-sm">Rig {dialogMode === 'edit' ? 'updated' : 'created'} successfully!</p>
+                                )}
+
+                            </div>
+                        </form>
+                        <div>
+                            {isSubmitting ? (
+                                <Button type="submit" disabled>
+                                    Submitting...
+                                </Button>
+                            ) : (
+                                dialogMode === 'edit' && <Button type="submit" form="RigDialogForm">Submit</Button>
+                            )}
+                            {dialogMode === 'edit' && <Button variant="secondary" onClick={() => setDialogMode('view')}>Cancel</Button>}
+                            {dialogMode === 'view' && (
+                                <> 
+                                    <Button onClick={() => setDialogMode('edit')}>Edit</Button>
+                                    <Button variant="destructive">Delete</Button>
+                                </>
+                            )}
+                        </div>
+                    </>
+                }
             </DialogContent>
         </Dialog>
+        </>
     );
     
     async function loadRig(rigId: string) {
@@ -143,32 +167,29 @@ export function RigDialog({
             setRequestErrors("Failed to get rig from server.")
         } 
 
-        const [data] = await response.json()
+        const [ data ] = await response.json()
 
-        const retrievedCompartments = data.compartments.reduce(
-            (acc: CompartmentsState, compartment: Compartment) => {
-                if (!acc[compartment.group_key]) {
-                    acc[compartment.group_key] = []
-                }
-                acc[compartment.group_key].push({
-                    id: compartment.id,
-                    reactKey: crypto.randomUUID(),
-                    name: compartment.name,
-                    position: compartment.position
-                })
-                return acc
-            }, 
-            {} as CompartmentsState
-        )
+        // const retrievedCompartments = data.compartments.reduce(
+        //     (acc: CompartmentsState, compartment: Compartment) => {
+        //         if (!acc[compartment.group_key]) {
+        //             acc[compartment.group_key] = []
+        //         }
+        //         acc[compartment.group_key].push({
+        //             id: compartment.id,
+        //             reactKey: crypto.randomUUID(),
+        //             name: compartment.name,
+        //             position: compartment.position
+        //         })
+        //         return acc
+        //     }, 
+        //     {} as CompartmentsState
+        // )
 
         setValidationErrors([])
-        setRig({
-            name: data.rig_name,
-            compartments: retrievedCompartments,
-            image_url: data.image_url
-        })
-        setName(data.rig_name)
-        setCompartments(retrievedCompartments)
+        setRig({...data})
+        // setName(data.rig_name)
+        // setCompartments(comp)
+        setRigIsLoading(false)
     }
 
     async function handleRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {
@@ -251,53 +272,6 @@ export function RigDialog({
         }
 
         return console.log('coming soon.')
-    }
-
-    function handleRemoveCompartment(reactKey: string, groupKey: CompartmentGroupKey) {
-        if (compartments[groupKey].length == 1) {
-            setValidationErrors(['You must have atleast one compartment'])
-            return
-        }
-
-        setCompartments( previousCompartments => ({
-            ...previousCompartments,
-            [groupKey]: previousCompartments[groupKey]
-            .filter((compartment) => compartment.reactKey !== reactKey)
-            .map((compartment, index) => ({
-                ...compartment,
-                position: index + 1
-            }))
-        }))
-    }
-
-    function handleAddNewCompartment(groupKey: CompartmentGroupKey) {
-
-        const lastPosition = compartments[groupKey].length
-
-        setCompartments(previousCompartments => ({
-            ...previousCompartments,
-            [groupKey]: [
-                ...previousCompartments[groupKey], 
-                {
-                    reactKey: crypto.randomUUID(),
-                    name: '',
-                    position: lastPosition + 1
-                }
-            ]
-        }))
-    }
-
-    function handleNameInputChange(value: string) {
-        setName(value);
-    }
-
-    function handleNewCompartmentInputChange(reactKey: string, groupKey: CompartmentGroupKey, name: string) {
-        setCompartments(previousCompartments => ({
-            ...previousCompartments,
-            [groupKey]: previousCompartments[groupKey].map((compartment) => {
-                return compartment.reactKey === reactKey ? {...compartment, name} : compartment
-            })
-        }))
     }
 }
 

@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { PlusIcon, Trash2 } from 'lucide-react';
+
 import {
   Field,
   FieldDescription,
@@ -8,63 +11,69 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
-import { PlusIcon, Trash2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+
+import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
+
+import { type Compartment } from '@/models/Compartment';
+import { type Rig } from '@/models/Rig'
 
 import { type CompartmentsState } from "./RigDialog";
 
 interface RigDialogCompartmentsTabProps {
     mode: string,
-    name: string,
-    compartments: CompartmentState,
-    handleNameInputChange: () => void,
-    handleNewCompartmentInputChange: () => void,
-    handleRemoveCompartment: () => void,
-    handleAddNewCompartment: () => void
+    rig?: Rig,
 }
 
 export function RigDialogCompartmentsTab({
     mode,
-    name,
-    compartments,
-    handleNameInputChange,
-    handleNewCompartmentInputChange,
-    handleRemoveCompartment,
-    handleAddNewCompartment
+    rig
 }: RigDialogCompartmentsTabProps) {
 
-    return (   
-        <FieldSet>
-            <FieldLegend>
-                {mode === 'create' ? 'Create New' : 'Edit'} Rig
-            </FieldLegend>
-            <FieldDescription>
-                {mode === 'create' ? 'Enter new' : 'Change'} apparatus name and its compartments.
-            </FieldDescription>
-            
-            <FieldGroup>
-                <Field orientation="horizontal">
-                    <FieldLabel htmlFor="name">Name</FieldLabel>
-                    <Input 
-                        id="name" 
-                        placeholder="Engine 240" 
-                        value={name}
-                        onChange={event => handleNameInputChange(event.target.value)}
-                    />
-                </Field>
-            </FieldGroup>
+    let initialCompartments;
+    if (mode === 'view') {
+        initialCompartments = rig.compartments.reduce(
+                    (acc: CompartmentsState, compartment: Compartment) => {
+                        if (!acc[compartment.group_key]) {
+                            acc[compartment.group_key] = []
+                        }
+                        acc[compartment.group_key].push({
+                            id: compartment.id,
+                            reactKey: crypto.randomUUID(),
+                            name: compartment.name,
+                            position: compartment.position
+                        })
+                        return acc
+                    }, 
+                    {} as CompartmentsState
+                )
+    } else if (mode === 'create') {
+        initialCompartments = COMPARTMENT_GROUPS.reduce( (acc, group) => {
+                acc[group.key] = [
+                    {
+                        reactKey: crypto.randomUUID(), 
+                        name: "", 
+                        position: 1
+                    }
+                ]
+                return acc
+            }, {} as CompartmentsState)
+    }
 
-            <FieldSeparator />
-            <FieldSet>
-                <FieldLegend>Compartments</FieldLegend>
-                <FieldDescription>Compartments are broken into various groups. Each group must have atleast one compartment.</FieldDescription>
-                
+
+    const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
+
+    console.log('compartments are: ', compartments)
+
+    return (   
+        <FieldSet>        
             {COMPARTMENT_GROUPS.map( (group) => {
                 return (
                     <> 
                         <FieldGroup>
                             <FieldLegend >{`- ${group.label}`}</FieldLegend>
 
-                        {compartments[group.key].map( (compartment) => {
+                        {compartments[group.key] && compartments[group.key].map( (compartment) => {
                             return (
                                 <Field key={compartment.reactKey} orientation="horizontal">
                                     <FieldLabel htmlFor={compartment.reactKey}>{compartment.position} </FieldLabel>
@@ -92,10 +101,50 @@ export function RigDialogCompartmentsTab({
                     </>
 
                 )
-            })}
-
-            
-            </FieldSet>
+            })}       
         </FieldSet>
     )
+
+    function handleNewCompartmentInputChange(reactKey: string, groupKey: CompartmentGroupKey, name: string) {
+        setCompartments(previousCompartments => ({
+            ...previousCompartments,
+            [groupKey]: previousCompartments[groupKey].map((compartment) => {
+                return compartment.reactKey === reactKey ? {...compartment, name} : compartment
+            })
+        }))
+    }
+
+    function handleRemoveCompartment(reactKey: string, groupKey: CompartmentGroupKey) {
+        if (compartments[groupKey].length == 1) {
+            setValidationErrors(['You must have atleast one compartment'])
+            return
+        }
+
+        setCompartments( previousCompartments => ({
+            ...previousCompartments,
+            [groupKey]: previousCompartments[groupKey]
+            .filter((compartment) => compartment.reactKey !== reactKey)
+            .map((compartment, index) => ({
+                ...compartment,
+                position: index + 1
+            }))
+        }))
+    }
+
+    function handleAddNewCompartment(groupKey: CompartmentGroupKey) {
+
+        const lastPosition = compartments[groupKey].length
+
+        setCompartments(previousCompartments => ({
+            ...previousCompartments,
+            [groupKey]: [
+                ...previousCompartments[groupKey], 
+                {
+                    reactKey: crypto.randomUUID(),
+                    name: '',
+                    position: lastPosition + 1
+                }
+            ]
+        }))
+    }
 }  

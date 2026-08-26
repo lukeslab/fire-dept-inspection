@@ -108,8 +108,8 @@ async function handleGetRigById(request: VercelRequest, response: VercelResponse
  
   const rig = await sql`
     SELECT
-      r.id AS rig_id,
-      r.name AS rig_name,
+      r.id,
+      r.name,
       r.image_url,
       COALESCE(
         json_agg(

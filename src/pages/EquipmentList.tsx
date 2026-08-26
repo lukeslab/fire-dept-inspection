@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import { useEffect, useState } from "react";
 
 import { useRigs } from "@/hooks/hooks";
@@ -33,7 +31,6 @@ interface Equipment{
     compartment_id: string
 }
 
->>>>>>> Stashed changes
 export default function EquipmentList() {
 
     const { rigs, isLoading: isLoadingRigs, error: loadRigsError, loadRigs } = useRigs();
@@ -49,11 +46,6 @@ export default function EquipmentList() {
     }, [viewMode])
 
     return (
-<<<<<<< Updated upstream
-        <div>
-            <h1>Equipment List</h1>
-        </div>
-=======
         <AppPage>
             <PageHeader
                 title="Equipment"
@@ -141,7 +133,6 @@ export default function EquipmentList() {
                 </AccordionItem>
             </Accordion> */}
         </AppPage>
->>>>>>> Stashed changes
     );
 
     async function loadEquipmentByRig(rigId: string | string[]) {
