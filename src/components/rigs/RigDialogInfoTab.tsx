@@ -15,13 +15,15 @@ import { EmptyOutline } from "../application/EmptyOutline";
 
 interface RigDialogInfoTabProps {
     mode: string,
-    name: string,
+    rig: {name: string, compartments: [], image_url: string},
 }
 
 export function RigDialogInfoTab({
     mode,
-    name,
+    rig,
 }: RigDialogInfoTabProps) {
+
+    const name = rig.name
 
     return (   
         <FieldSet>
@@ -34,7 +36,7 @@ export function RigDialogInfoTab({
             
             <FieldGroup className="grid grid-cols-2 gap-4">
                 {/* <EmptyState icon={<div>hello</div>} title="test" description="test" action={<button>sup</button>}/> */}
-               <EmptyOutline></EmptyOutline>
+               {mode === 'create' ? <EmptyOutline></EmptyOutline> : <img src={`${rig.image_url}`}/>}
                 <FieldGroup>
                     <FieldGroup>
                         <Field orientation="horizontal">

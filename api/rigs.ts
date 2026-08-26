@@ -110,6 +110,7 @@ async function handleGetRigById(request: VercelRequest, response: VercelResponse
     SELECT
       r.id AS rig_id,
       r.name AS rig_name,
+      r.image_url,
       COALESCE(
         json_agg(
           json_build_object(

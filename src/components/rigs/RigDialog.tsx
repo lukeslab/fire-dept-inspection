@@ -58,6 +58,7 @@ export function RigDialog({
     const [dialogTab, setDialogTab] = useState<DialogTab>('info')
     const [dialogMode, setDialogMode] = useState<"create" | "view" | "edit">(mode)
 
+    const [rig, setRig] = useState({})
     const [name, setName] = useState<string>("")
     const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
     
@@ -105,7 +106,7 @@ export function RigDialog({
                 <form onSubmit={handleRigDialogSubmit}>
                     <div className=" items-center mt-6">
 
-                        {dialogTab === 'info' ? <RigDialogInfoTab mode={dialogMode} name={name} /> : 'test'}
+                        {dialogTab === 'info' ? <RigDialogInfoTab mode={dialogMode} rig={rig} /> : 'test'}
 
                         {validationErrors.length > 0 && (
                             <ul className="text-destructive text-sm">
@@ -161,6 +162,11 @@ export function RigDialog({
         )
 
         setValidationErrors([])
+        setRig({
+            name: data.rig_name,
+            compartments: retrievedCompartments,
+            image_url: data.image_url
+        })
         setName(data.rig_name)
         setCompartments(retrievedCompartments)
     }
