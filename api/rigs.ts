@@ -75,6 +75,7 @@ async function handleGetRigs(response: VercelResponse) {
     SELECT
       r.id,
       r.name,
+      r.image_url,
       r.created_at,
       COALESCE(
         JSON_AGG(
@@ -93,6 +94,7 @@ async function handleGetRigs(response: VercelResponse) {
     GROUP BY
       r.id,
       r.name,
+      r.image_url,
       r.created_at
     ORDER BY
       r.name;

@@ -11,16 +11,21 @@ import { ErrorMessage } from "@/components/application/ErrorMessage";
 import type { Rig } from "@/models/Rig";
 
 export default function RigList() {
+
+    // const { rigs, isLoading, error: loadRigsError, loadRigs } = useRigs();
+
     const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
-    const [rigs, setRigs] = useState<Rig[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [loadRigsError, setLoadRigsError] = useState<string | null>(null);
     const [deleteRigError, setDeleteRigError] = useState<string | null>(null);
 
-    useEffect( () => {
+    const [rigs, setRigs] = useState<Rig[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [loadError, setLoadError] = useState<string | null>(null)
 
+    useEffect(() => {
         loadRigs()
     }, [])
+
+    
     return (
         <>
             <AppPage>
@@ -36,7 +41,7 @@ export default function RigList() {
                 />
 
                 {isLoading ? <SpinnerButton /> : 
-                    loadRigsError ? <ErrorMessage message={loadRigsError} /> : rigs.map((rig) => {
+                    loadError ? <ErrorMessage message={loadError} /> : rigs.map((rig) => {
 
                     return (<RigCard
                                 key={rig.id}
@@ -62,20 +67,23 @@ export default function RigList() {
 
     async function loadRigs() {
         try {
-            const response = await fetch("/api/rigs");
+        setIsLoading(true)
+        setLoadError(null)
 
-            if (!response.ok) {
-                throw new Error(`Error fetching rigs: ${response.statusText}`);
-            }
+        const response = await fetch("/api/rigs")
 
-            const data = await response.json();
-            setRigs(data);
-            console.log(data)
+        if (!response.ok) {
+            throw new Error(`Error fetching rigs: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        setRigs(data)
         } catch (err) {
-            if (err instanceof Error) setLoadRigsError(err.message)
-            else setLoadRigsError("An unepected error occured.")
+        setLoadError(
+            err instanceof Error ? err.message : "An unexpected error occurred."
+        )
         } finally {
-            setIsLoading(false);
+        setIsLoading(false)
         }
     }
 

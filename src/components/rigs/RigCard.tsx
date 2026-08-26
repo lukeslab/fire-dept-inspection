@@ -2,18 +2,19 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item"
 
 import { RigDialog } from './RigDialog'
 import { DeleteRigDialog } from "@/components/rigs/DeleteRigDialog"
 
 import type { Rig } from "@/models/Rig"
+
 interface RigCardProps {
   rig: Rig;
   onDeleteError: (message: string) => void;
@@ -24,17 +25,42 @@ export function RigCard({rig, onDeleteError, loadRigs }: RigCardProps) {
 
     const [isDeleting, setIsDeleting] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
 
     return (
       <>
 
-        <RigDialog mode='edit' open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} rigId={rig.id} loadRigs={loadRigs}/>
+        <RigDialog mode='view' open={isDialogOpen} onOpenChange={setIsDialogOpen} rigId={rig.id} loadRigs={loadRigs}/>
 
         <DeleteRigDialog rig={rig} open={isConfirmOpen} onOpenChange={setIsConfirmOpen} deleteRig={deleteRig} />
 
-        <Card className="w-full max-w-sm">
+        <Item 
+            key={rig.id} 
+            role="listitem"
+            className="items-stretch py-4"
+        >
+            <ItemMedia
+                className="w-52 shrink-0 self-stretch"
+            >
+                <img
+                src={rig.image_url}
+                alt={`image of ${rig.name}`}
+                className="h-full w-full object-contain"
+                />
+            </ItemMedia>
+            <ItemContent>
+                <ItemTitle>{rig.name}</ItemTitle>
+                <ItemDescription>Description for {rig.name}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                 >View</Button>
+            </ItemActions>
+        </Item>
+
+        {/* <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>{rig.name}</CardTitle>
             <CardDescription>
@@ -61,10 +87,8 @@ export function RigCard({rig, onDeleteError, loadRigs }: RigCardProps) {
         
           </CardFooter>
           
-        </Card>
+        </Card> */}
       </>
-
-
     )
 
   async function deleteRig(rigId: string) {

@@ -1,29 +1,24 @@
 import { useState, useEffect } from 'react'
+
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
     DialogContent,
+    DialogHeader,
     // DialogDescription,
     // DialogHeader,
-    // DialogTitle,
+    DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
-import { PlusIcon, Trash2 } from 'lucide-react';
-import type { Compartment } from "@/models/Compartment"
-import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
-// import { Separator } from '../ui/separator';
 
+import { RigDialogCompartmentsTab } from './RigDialogCompartmentsTab';
+import { RigDialogInfoTab } from './RigDialogInfoTab';
+
+import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
+
+import type { Compartment } from "@/models/Compartment"
 interface RigDialogProps {
-    mode: "edit" | "create",
+    mode: "create" | "view",
     rigId?: string,
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -37,8 +32,9 @@ interface ReactFormCompartment {
     position: number
 }
 
+type DialogTab = "info" | "compartments" | "equipment"
 type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
-type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
+export type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
 
 export function RigDialog({
     mode,
@@ -59,18 +55,22 @@ export function RigDialog({
         return acc
     }, {} as CompartmentsState)
     
-    const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
+    const [dialogTab, setDialogTab] = useState<DialogTab>('info')
+    const [dialogMode, setDialogMode] = useState<"create" | "view" | "edit">(mode)
+
     const [name, setName] = useState<string>("")
+    const [compartments, setCompartments] = useState<CompartmentsState>(initialCompartments)
+    
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [validationErrors, setValidationErrors] = useState<string[]>([])
     const [requestErrors, setRequestErrors] = useState<string | null>(null)
     const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
     useEffect( () => {
-        if (mode === 'edit' && open && rigId) {
+        if (dialogMode === 'view' && open && rigId) {
             loadRig(rigId)
         }
-    },[mode, open, rigId] )
+    },[dialogMode, open, rigId] )
 
 
     // Clean up success / fail messaging on dialog close.
@@ -81,81 +81,32 @@ export function RigDialog({
         })()
     }, [open])
 
-    console.log(compartments)
+    // console.log(compartments)
     return (
         <Dialog
             open={open}
             onOpenChange={onOpenChange}
-        >
-            <DialogContent className="overflow-y-auto max-h-[90vh]">
+        >     
+            <DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">
+                <DialogHeader>
+                    <DialogTitle>
+                        {dialogMode === 'create' ? 'Add New Rig' : dialogMode === 'edit' ? `Edit Rig: ${name}` : `View Rig: ${name}`}
+                    </DialogTitle>
+                </DialogHeader>
+              
+                <Tabs defaultValue="info" onValueChange={(value) => setDialogTab(value)}>
+                    <TabsList variant="line">
+                        <TabsTrigger value="info">Info</TabsTrigger>
+                        <TabsTrigger value="compartments">Compartments</TabsTrigger>
+                        <TabsTrigger value="equipment">Equipment</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+
                 <form onSubmit={handleRigDialogSubmit}>
-                    <FieldSet>
-                        <FieldLegend>
-                            {mode === 'create' ? 'Create New' : 'Edit'} Rig
-                        </FieldLegend>
-                        <FieldDescription>
-                            {mode === 'create' ? 'Enter new' : 'Change'} apparatus name and its compartments.
-                        </FieldDescription>
-                        
-                        <FieldGroup>
-                            <Field orientation="horizontal">
-                                <FieldLabel htmlFor="name">Name</FieldLabel>
-                                <Input 
-                                    id="name" 
-                                    placeholder="Engine 240" 
-                                    value={name}
-                                    onChange={event => handleNameInputChange(event.target.value)}
-                                />
-                            </Field>
-                        </FieldGroup>
-               
-                        <FieldSeparator />
-                        <FieldSet>
-                            <FieldLegend>Compartments</FieldLegend>
-                            <FieldDescription>Compartments are broken into various groups. Each group must have atleast one compartment.</FieldDescription>
-                            
-                        {COMPARTMENT_GROUPS.map( (group) => {
-                            return (
-                                <> 
-                                    <FieldGroup>
-                                        <FieldLegend >{`- ${group.label}`}</FieldLegend>
+                    <div className=" items-center mt-6">
 
-                                    {compartments[group.key].map( (compartment) => {
-                                        return (
-                                            <Field key={compartment.reactKey} orientation="horizontal">
-                                                <FieldLabel htmlFor={compartment.reactKey}>{compartment.position} </FieldLabel>
-                                                <Input 
-                                                    id={compartment.reactKey} 
-                                                    placeholder={group.placeholder} 
-                                                    value={compartment?.name} 
-                                                    onChange={event => handleNewCompartmentInputChange(compartment.reactKey, group.key, event.target.value)}    
-                                                />
-                                                <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveCompartment(compartment.reactKey, group.key)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </Field>
-                                        )
-                                    })}
-                                    </FieldGroup>
-                                    <FieldGroup>
-                                        <Field orientation="horizontal">
-                                            <Button type="button" variant="outline" onClick={() => handleAddNewCompartment(group.key)}>
-                                                <PlusIcon 
-                                                    className="h-4 w-4" /> Add Compartment
-                                            </Button>
-                                        </Field>
-                                    </FieldGroup>
-                                </>
+                        {dialogTab === 'info' ? <RigDialogInfoTab mode={dialogMode} name={name} /> : 'test'}
 
-                            )
-                        })}
-
-                       
-                        </FieldSet>
-                    </FieldSet>
-                        
-                
-                    <div className="flex justify-between items-center mt-6">
                         {validationErrors.length > 0 && (
                             <ul className="text-destructive text-sm">
                                 {validationErrors.map((error, index) => (
