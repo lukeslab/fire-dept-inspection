@@ -18,7 +18,7 @@ import { EmptyOutline } from "@/components/application/EmptyOutline";
 
 interface RigDialogInfoTabProps {
     mode: string,
-    rig: Rig,
+    rig?: Rig,
 }
 
 export function RigDialogInfoTab({
@@ -28,9 +28,9 @@ export function RigDialogInfoTab({
 
     console.log(rig)
 
-    const [name, setName] = useState(rig.name)
-    const [year, setYear] = useState(rig.year)
-    const [make, setMake] = useState(rig.make)
+    const [name, setName] = useState(rig?.name)
+    const [year, setYear] = useState(rig?.year)
+    const [make, setMake] = useState(rig?.make)
 
     console.log(name)
 
@@ -44,7 +44,7 @@ export function RigDialogInfoTab({
             </FieldDescription>
             
             <FieldGroup className="grid grid-cols-2 gap-4">
-               {mode === 'create' ? <EmptyOutline></EmptyOutline> : <img src={`${rig.image_url}`}/>}
+               {mode === 'create' ? <EmptyOutline></EmptyOutline> : <img src={`${rig?.image_url}`}/>}
                 <FieldGroup>
                     <FieldGroup>
                         <Field orientation="horizontal">

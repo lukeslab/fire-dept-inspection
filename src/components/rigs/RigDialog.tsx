@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
 
-import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
-
 import type { Rig } from "@/models/Rig"
 
 import { RigDialogCompartmentsTab } from './RigDialogCompartmentsTab';
@@ -27,16 +25,9 @@ interface RigDialogProps {
     loadRigs: () => void;
 }
 
-interface ReactFormCompartment {
-    id?: string,
-    reactKey: string,
-    name: string,
-    position: number
-}
-
 type DialogTab = "info" | "compartments" | "equipment"
-type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
-export type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
+// type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
+// export type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
 
 export function RigDialog({
     mode,
@@ -95,11 +86,11 @@ export function RigDialog({
             onOpenChange={onOpenChange}
         >   
             <DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">  
-                {rigIsLoading ? <Spinner /> :
+                {(dialogMode === 'view' && rigIsLoading) ? <Spinner /> : 
                     <>
                         <DialogHeader>
                             <DialogTitle>
-                                {dialogMode === 'create' ? 'Add New Rig' : dialogMode === 'edit' ? `Edit Rig: ${rig.name}` : `View Rig: ${rig.name}`}
+                                {dialogMode === 'create' ? 'Add New Rig' : dialogMode === 'edit' ? `Edit Rig: ${rig?.name}` : `View Rig: ${rig?.name}`}
                             </DialogTitle>
                         </DialogHeader>
                     
