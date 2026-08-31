@@ -12,10 +12,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
 
+import { COMPARTMENT_GROUPS } from '@/lib/db/compartmentGroups';
+
+import { type Compartment } from '@/models/Compartment';
 import type { Rig } from "@/models/Rig"
 
 import { RigDialogCompartmentsTab } from './RigDialogCompartmentsTab';
 import { RigDialogInfoTab } from './RigDialogInfoTab';
+
+interface CompartmentFormInput {
+    id?: string,
+    reactKey: string,
+    name: string,
+    position: number
+}
+type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
+export type CompartmentsState = Record<CompartmentGroupKey, CompartmentFormInput[]>
 
 interface RigDialogProps {
     mode: "create" | "view",
@@ -26,8 +38,6 @@ interface RigDialogProps {
 }
 
 type DialogTab = "info" | "compartments" | "equipment"
-// type CompartmentGroupKey = (typeof COMPARTMENT_GROUPS)[number]['key']
-// export type CompartmentsState = Record<CompartmentGroupKey, ReactFormCompartment[]>
 
 export function RigDialog({
     mode,
@@ -36,39 +46,26 @@ export function RigDialog({
     onOpenChange,
     loadRigs
 }: RigDialogProps) {
-
-    // const initialCompartments = COMPARTMENT_GROUPS.reduce( (acc, group) => {
-    //     acc[group.key] = [
-    //         {
-    //             reactKey: crypto.randomUUID(), 
-    //             name: "", 
-    //             position: 1
-    //         }
-    //     ]
-    //     return acc
-    // }, {} as CompartmentsState)
     
     const [dialogTab, setDialogTab] = useState<DialogTab>('info')
     const [dialogMode, setDialogMode] = useState<"create" | "view" | "edit">(mode)
 
     const [rigIsLoading, setRigIsLoading] = useState(true);
     const [rig, setRig] = useState<Rig>()
-    // const [name, setName] = useState<string>("")
-    
-    // const [deleteDialogIsOpen, setDeleteDialogIsOpen] = useState(false)
-    // const [isDeleting, setIsDeleting] = useState(false)
 
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [validationErrors, setValidationErrors] = useState<string[]>([])
     const [requestErrors, setRequestErrors] = useState<string | null>(null)
     const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
+    const [compartments, setCompartments] = useState<CompartmentsState>({} as CompartmentsState)
+
     useEffect( () => {
         if (dialogMode === 'view' && open && rigId) {
             loadRig(rigId)
+
         }
     },[dialogMode, open, rigId] )
-
 
     // Clean up success / fail messaging on dialog close.
     useEffect( () => {
@@ -78,9 +75,7 @@ export function RigDialog({
         })()
     }, [open])
 
-    // console.log(compartments)
     return (
-        <>
         <Dialog
             open={open}
             onOpenChange={onOpenChange}
@@ -107,7 +102,7 @@ export function RigDialog({
 
                                 {dialogTab === 'info' && <RigDialogInfoTab mode={dialogMode} rig={rig} /> } 
 
-                                {dialogTab === 'compartments' && <RigDialogCompartmentsTab mode={dialogMode} rig={rig} />}
+                                {dialogTab === 'compartments' && <RigDialogCompartmentsTab mode={dialogMode} compartments={compartments} setCompartments={setCompartments} />}
 
                                 {/* {dialogTab === 'equipment' && <RigDialogEquipmentTab />} */}
 
@@ -147,9 +142,43 @@ export function RigDialog({
                 }
             </DialogContent>
         </Dialog>
-        </>
     );
     
+    function initializeCompartments(compartments: Compartment[]){
+        if (dialogMode === 'view') {
+         return compartments.reduce(
+                    (acc, compartment) => {
+                        if (!acc[compartment.group_key]) {
+                            acc[compartment.group_key] = []
+                        }
+                        acc[compartment.group_key].push({
+                            id: compartment.id,
+                            reactKey: crypto.randomUUID(),
+                            name: compartment.name,
+                            position: compartment.position
+                        })
+                        return acc
+                    }, 
+                    {} as CompartmentsState
+                )
+        }
+        
+        if (dialogMode === 'create') {
+            return COMPARTMENT_GROUPS.reduce( (acc, group) => {
+                    acc[group.key] = [
+                        {
+                            reactKey: crypto.randomUUID(), 
+                            name: "", 
+                            position: 1
+                        }
+                    ]
+                    return acc
+                }, {} as CompartmentsState)
+        }
+
+        return {} as CompartmentsState
+    }
+
     async function loadRig(rigId: string) {
 
         const response = await fetch(`/api/rigs?id=${rigId}`)
@@ -160,31 +189,21 @@ export function RigDialog({
 
         const [ data ] = await response.json()
 
-        // const retrievedCompartments = data.compartments.reduce(
-        //     (acc: CompartmentsState, compartment: Compartment) => {
-        //         if (!acc[compartment.group_key]) {
-        //             acc[compartment.group_key] = []
-        //         }
-        //         acc[compartment.group_key].push({
-        //             id: compartment.id,
-        //             reactKey: crypto.randomUUID(),
-        //             name: compartment.name,
-        //             position: compartment.position
-        //         })
-        //         return acc
-        //     }, 
-        //     {} as CompartmentsState
-        // )
-
         setValidationErrors([])
         setRig({...data})
-        // setName(data.rig_name)
-        // setCompartments(comp)
+
+        setCompartments(initializeCompartments(data.compartments))
+
         setRigIsLoading(false)
     }
 
     async function handleRigDialogSubmit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
+
+        
+
+        const formData = new FormData(event.target)
+        console.log(formData)
 
         setValidationErrors([]);
         setRequestErrors(null); 
