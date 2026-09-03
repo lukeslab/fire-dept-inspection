@@ -29,21 +29,21 @@ import type { CompartmentsState, RigEquipment } from "./RigDialog"
 import {
 	type DataTableFeatures,
 	DataTable,
-} from "./RigDialogEquipmentTabDataTable"
+} from "./RigDialogInventoryTabDataTable"
 
-interface RigDialogEquipmentTabProps {
+interface RigDialogInventoryTabProps {
 	mode: string
 	compartments: CompartmentsState
 	equipment: RigEquipment[]
 	equipmentIsLoading: boolean
 }
 
-export function RigDialogEquipmentTab({
+export function RigDialogInventoryTab({
 	mode,
 	compartments,
 	equipment,
 	equipmentIsLoading,
-}: RigDialogEquipmentTabProps) {
+}: RigDialogInventoryTabProps) {
 	const columnHelper = createColumnHelper<DataTableFeatures, RigEquipment>()
 	const columns = columnHelper.columns([
 		columnHelper.accessor("name", {

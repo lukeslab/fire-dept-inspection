@@ -18,8 +18,7 @@ import { type Compartment } from "@/models/Compartment"
 import type { Rig } from "@/models/Rig"
 
 import { RigDialogInfoTab } from "./RigDialogInfoTab"
-import { RigDialogCompartmentsTab } from "./RigDialogCompartmentsTab"
-import { RigDialogEquipmentTab } from "./RigDialogEquipmentTab"
+import { RigDialogInventoryTab } from "./RigDialogInventoryTab"
 
 interface CompartmentFormInput {
 	id?: string
@@ -50,7 +49,7 @@ interface RigDialogProps {
 	loadRigs: () => void
 }
 
-type DialogTab = "info" | "compartments" | "equipment"
+type DialogTab = "info" | "inventory"
 
 export function RigDialog({
 	mode,
@@ -81,7 +80,7 @@ export function RigDialog({
 		if (dialogMode === "view" && open && rigId) {
 			loadRig(rigId)
 		}
-		dialogTab === "equipment" && equipmentIsLoading && loadEquipmentById(rigId)
+		dialogTab === "inventory" && equipmentIsLoading && loadEquipmentById(rigId)
 	}, [dialogMode, dialogTab, open, rigId])
 
 	// Clean up success / fail messaging on dialog close.
@@ -114,8 +113,7 @@ export function RigDialog({
 							onValueChange={(value) => setDialogTab(value)}>
 							<TabsList variant="line">
 								<TabsTrigger value="info">Info</TabsTrigger>
-								<TabsTrigger value="compartments">Compartments</TabsTrigger>
-								<TabsTrigger value="equipment">Equipment</TabsTrigger>
+								<TabsTrigger value="inventory">Inventory</TabsTrigger>
 							</TabsList>
 						</Tabs>
 
@@ -125,16 +123,8 @@ export function RigDialog({
 									<RigDialogInfoTab mode={dialogMode} rig={rig} />
 								)}
 
-								{dialogTab === "compartments" && (
-									<RigDialogCompartmentsTab
-										mode={dialogMode}
-										compartments={compartments}
-										setCompartments={setCompartments}
-									/>
-								)}
-
-								{dialogTab === "equipment" && (
-									<RigDialogEquipmentTab
+								{dialogTab === "inventory" && (
+									<RigDialogInventoryTab
 										mode={dialogMode}
 										compartments={compartments}
 										equipment={equipment}
