@@ -30,6 +30,7 @@ import {
 	type DataTableFeatures,
 	DataTable,
 } from "./RigDialogInventoryTabDataTable"
+import { RigDialogInventoryMobileView } from "./RigDialogInventoryMobileView"
 
 interface RigDialogInventoryTabProps {
 	mode: string
@@ -103,7 +104,16 @@ export function RigDialogInventoryTab({
 			) : (
 				<FieldSet>
 					<FieldLegend>Assigned Equipment</FieldLegend>
-					<DataTable columns={columns} data={equipment} />
+					{/* Mobile: below 768px */}
+					<div className="md:hidden">
+						<RigDialogInventoryMobileView equipment={equipment} />
+					</div>
+
+					{/* Tablet / Desktop: above 786px */}
+					<div className="hidden md:block">
+						<DataTable columns={columns} data={equipment} />
+					</div>
+
 					{/* <Table>
 						<TableHeader>
 							<TableRow>

@@ -39,6 +39,7 @@ export interface RigEquipment {
 	name: string
 	hasfunction: boolean
 	group_key: string
+	expected_quantity: number
 }
 
 interface RigDialogProps {
