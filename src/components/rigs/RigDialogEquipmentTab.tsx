@@ -1,30 +1,7 @@
-import { MoveRight } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
+import { createColumnHelper } from "@tanstack/react-table"
 
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion"
 import { Spinner } from "@/components/ui/spinner"
-import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table"
-import {
-	Item,
-	ItemHeader,
-	ItemActions,
-	ItemContent,
-	ItemDescription,
-	ItemMedia,
-	ItemTitle,
-} from "@/components/ui/item"
 import {
 	Field,
 	FieldLegend,
@@ -35,14 +12,24 @@ import {
 	//   FieldLegend,
 	FieldSet,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
 
-import { type Rig } from "@/models/Rig"
-
 import type { CompartmentsState, RigEquipment } from "./RigDialog"
+import {
+	type DataTableFeatures,
+	DataTable,
+} from "./RigDialogEquipmentTabDataTable"
 
 interface RigDialogEquipmentTabProps {
 	mode: string
@@ -57,6 +44,58 @@ export function RigDialogEquipmentTab({
 	equipment,
 	equipmentIsLoading,
 }: RigDialogEquipmentTabProps) {
+	const columnHelper = createColumnHelper<DataTableFeatures, RigEquipment>()
+	const columns = columnHelper.columns([
+		columnHelper.accessor("name", {
+			header: "Item Name",
+		}),
+		columnHelper.accessor("group_key", {
+			header: "Compartment Group",
+			cell: ({ row }) => {
+				const group = COMPARTMENT_GROUPS.find(
+					(group) => row.getValue("group_key") === group.key,
+				)
+
+				return <div>{group.label}</div>
+			},
+		}),
+		columnHelper.accessor("compartment_name", {
+			header: "Compartment",
+		}),
+		columnHelper.accessor("hasfunction", {
+			header: "Has Function",
+		}),
+		columnHelper.display({
+			id: "actions",
+			cell: ({ row }) => {
+				const equipment = row.original
+
+				return (
+					<DropdownMenu>
+						<DropdownMenuTrigger
+							render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+							<span className="sr-only">Open menu</span>
+							<MoreHorizontal className="h-4 w-4" />
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuGroup>
+								<DropdownMenuLabel>Actions</DropdownMenuLabel>
+								<DropdownMenuItem onClick={() => console.log(equipment.name)}>
+									Copy payment ID
+								</DropdownMenuItem>
+							</DropdownMenuGroup>
+							<DropdownMenuSeparator />
+							<DropdownMenuGroup>
+								<DropdownMenuItem>View customer</DropdownMenuItem>
+								<DropdownMenuItem>View payment details</DropdownMenuItem>
+							</DropdownMenuGroup>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				)
+			},
+		}),
+	])
+
 	return (
 		<>
 			{equipmentIsLoading ? (
@@ -64,13 +103,15 @@ export function RigDialogEquipmentTab({
 			) : (
 				<FieldSet>
 					<FieldLegend>Assigned Equipment</FieldLegend>
-					<Table>
+					<DataTable columns={columns} data={equipment} />
+					{/* <Table>
 						<TableHeader>
 							<TableRow>
 								<TableHead>Equipment</TableHead>
+								<TableHead>Compartment Group</TableHead>
 								<TableHead>Compartment</TableHead>
-								<TableHead>Functional</TableHead>
-								<TableHead>Quantity</TableHead>
+								<TableHead>Has Function</TableHead>
+								<TableHead>Expected Quantity</TableHead>
 								{mode === "edit" && <TableHead>Actions</TableHead>}
 							</TableRow>
 						</TableHeader>
@@ -83,11 +124,8 @@ export function RigDialogEquipmentTab({
 								return (
 									<TableRow>
 										<TableCell>{equipment.name}</TableCell>
-										<TableCell>
-											{`${group.label} `}
-											<MoveRight strokeWidth="1px" className="inline" />{" "}
-											{`${equipment.compartment_name}`}
-										</TableCell>
+										<TableCell>{`${group.label} `}</TableCell>
+										<TableCell>{`${equipment.compartment_name}`}</TableCell>
 										<TableCell>
 											{equipment.hasfunction ? "Yes" : "No"}
 										</TableCell>
@@ -96,7 +134,7 @@ export function RigDialogEquipmentTab({
 								)
 							})}
 						</TableBody>
-					</Table>
+					</Table> */}
 					{/* {
 						COMPARTMENT_GROUPS.map((group) => {
 							return (
