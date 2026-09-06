@@ -3,16 +3,6 @@ import { Package } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 
-// import { Button } from "@/components/ui/button"
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuGroup,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu"
 import {
 	Item,
 	ItemActions,
@@ -32,28 +22,34 @@ interface RigDialogInventoryMobileViewProps {
 	equipment: RigEquipment[]
 }
 
+export interface FilterMenuOption {
+	key: string
+	label: string
+	checked: boolean
+}
+
 export function RigDialogInventoryMobileView({
 	equipment,
 }: RigDialogInventoryMobileViewProps) {
-	const [selectedGroupFilters, setSelectedGroupFilters] = useState<
-		{ key: string; label: string }[]
+	const [filterMenuOptions, setFilterMenuOptions] = useState<
+		FilterMenuOption[]
 	>(
 		COMPARTMENT_GROUPS.map((group) => ({
 			key: group.key,
 			label: group.label,
+			checked: true,
 		})),
 	)
 
-	const menuOptions = [...selectedGroupFilters]
+	// const menuOptions = [...filterMenuOptions]
 
 	const filteredEquipment = useMemo(() => {
-		if (selectedGroupFilters.length === COMPARTMENT_GROUPS.length)
-			return equipment
+		if (filterMenuOptions.length === COMPARTMENT_GROUPS.length) return equipment
 
 		return equipment.filter((item) => {
-			selectedGroupFilters.includes(item.group_key)
+			filterMenuOptions.find((menuOption) => item.group_key === menuOption.key)
 		})
-	}, [selectedGroupFilters, equipment])
+	}, [filterMenuOptions, equipment])
 
 	if (equipment.length === 0) {
 		return (
@@ -72,12 +68,12 @@ export function RigDialogInventoryMobileView({
 			<ItemGroup>
 				<DropdownMenuCheckboxes
 					menuLabel={"Compartment Groups"}
-					menuOptions={selectedGroupFilters}
-					onChange={setSelectedGroupFilters}
+					filterMenuOptions={filterMenuOptions}
+					setFilterMenuOptions={setFilterMenuOptions}
 				/>
 			</ItemGroup>
 			<ItemGroup className="gap-2">
-				{equipment.map((item) => {
+				{filteredEquipment.map((item) => {
 					const groupLabel =
 						COMPARTMENT_GROUPS.find((group) => group.key === item.group_key)
 							?.label ?? item.group_key

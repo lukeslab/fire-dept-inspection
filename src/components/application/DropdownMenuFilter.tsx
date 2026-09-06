@@ -10,21 +10,19 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import type { FilterMenuOption } from "@/components/rigs/RigDialogInventoryMobileView"
+
 interface DropdownMenuCheckboxesProps {
 	menuLabel: string
-	menuOptions: { key: string; label: string }
-	onChange: (value: string) => void
+	filterMenuOptions: FilterMenuOption[]
+	setFilterMenuOptions: React.Dispatch<React.SetStateAction<FilterMenuOption[]>>
 }
 
 export function DropdownMenuCheckboxes({
 	menuLabel,
-	menuOptions,
-	onChange,
-}): DropdownMenuCheckboxesProps {
-	const [showStatusBar, setShowStatusBar] = useState(true)
-	const [showActivityBar, setShowActivityBar] = useState(false)
-	const [showPanel, setShowPanel] = useState(false)
-
+	filterMenuOptions,
+	setFilterMenuOptions,
+}: DropdownMenuCheckboxesProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -33,27 +31,24 @@ export function DropdownMenuCheckboxes({
 			<DropdownMenuContent className="w-40">
 				<DropdownMenuGroup>
 					<DropdownMenuLabel>Select 1 or more options</DropdownMenuLabel>
-					{menuOptions.map((option) => {
+					{filterMenuOptions.map((option) => {
 						return (
 							<DropdownMenuCheckboxItem
 								key={option.key}
-								checked={showStatusBar ?? false}
-								onCheckedChange={onChange}>
+								checked={option.checked}
+								onCheckedChange={(checked) => {
+									setFilterMenuOptions((previousOptions) => {
+										return previousOptions.map((previousOption) => {
+											return option.key === previousOption.key
+												? { ...previousOption, checked }
+												: previousOption
+										})
+									})
+								}}>
 								{option.label}
 							</DropdownMenuCheckboxItem>
 						)
 					})}
-					{/* <DropdownMenuCheckboxItem
-						checked={showActivityBar}
-						onCheckedChange={setShowActivityBar}
-						disabled>
-						Activity Bar
-					</DropdownMenuCheckboxItem>
-					<DropdownMenuCheckboxItem
-						checked={showPanel}
-						onCheckedChange={setShowPanel}>
-						Panel
-					</DropdownMenuCheckboxItem> */}
 				</DropdownMenuGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
