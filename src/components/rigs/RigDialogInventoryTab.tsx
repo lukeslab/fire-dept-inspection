@@ -103,7 +103,7 @@ export function RigDialogInventoryTab({
 				<Spinner />
 			) : (
 				<FieldSet>
-					<FieldLegend>Assigned Equipment</FieldLegend>
+					{/* <FieldLegend>Assigned Equipment</FieldLegend> */}
 					{/* Mobile: below 768px */}
 					<div className="md:hidden">
 						<RigDialogInventoryMobileView equipment={equipment} />

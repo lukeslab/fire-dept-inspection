@@ -1,8 +1,18 @@
 import { useState, useMemo } from "react"
-import { Package } from "lucide-react"
+import { Package, PlusCircleIcon, Trash2, EllipsisVertical } from "lucide-react"
 
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuItem,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuLabel,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
 	Item,
 	ItemActions,
@@ -41,15 +51,15 @@ export function RigDialogInventoryMobileView({
 		})),
 	)
 
-	// const menuOptions = [...filterMenuOptions]
-
 	const filteredEquipment = useMemo(() => {
-		if (filterMenuOptions.length === COMPARTMENT_GROUPS.length) return equipment
-
 		return equipment.filter((item) => {
-			filterMenuOptions.find((menuOption) => item.group_key === menuOption.key)
+			return filterMenuOptions.find(
+				(menuOption) => menuOption.checked && item.group_key === menuOption.key,
+			)
 		})
 	}, [filterMenuOptions, equipment])
+
+	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
 
 	if (equipment.length === 0) {
 		return (
@@ -65,51 +75,83 @@ export function RigDialogInventoryMobileView({
 
 	return (
 		<>
-			<ItemGroup>
+			{equipmentDialogIsOpen && <EquipmentDialog />}
+
+			<ItemGroup className="flex flex-row mb-5">
+				<ItemTitle>Search:</ItemTitle>
+				<Input
+					className="w-fit border-gray-300 rounded-sm border-1 pl-2"
+					type="search"
+					placeholder="Enter item name..."
+				/>
+				<Button className="rounded-sm border-1 bg-red-700">
+					<PlusCircleIcon /> Add
+				</Button>
+			</ItemGroup>
+			<ItemGroup className="flex flex-row mt-5 mb-5">
+				<ItemTitle>Filters:</ItemTitle>
 				<DropdownMenuCheckboxes
-					menuLabel={"Compartment Groups"}
+					menuLabel={"Groups"}
 					filterMenuOptions={filterMenuOptions}
 					setFilterMenuOptions={setFilterMenuOptions}
 				/>
 			</ItemGroup>
-			<ItemGroup className="gap-2">
+			<ItemGroup className="flex gap-2">
 				{filteredEquipment.map((item) => {
 					const groupLabel =
 						COMPARTMENT_GROUPS.find((group) => group.key === item.group_key)
 							?.label ?? item.group_key
 
 					return (
-						<Item
-							key={item.id}
-							variant="outline"
-							size="sm"
-							className="items-center">
-							<ItemMedia variant="icon">
-								<Package className="size-4" />
-							</ItemMedia>
+						<ItemGroup className="flex-row items-center">
+							<Item
+								key={item.id}
+								variant="outline"
+								size="sm"
+								className="items-center">
+								<ItemMedia variant="icon">
+									<Package className="size-4" />
+								</ItemMedia>
 
-							<ItemContent className="min-w-0">
-								<ItemTitle className="truncate">{item.name}</ItemTitle>
+								<ItemContent className="min-w-0">
+									<ItemTitle className="truncate">{item.name}</ItemTitle>
 
-								<ItemDescription className="truncate">
-									{groupLabel}
+									<ItemDescription className="truncate">
+										{groupLabel}
 
-									<span className="px-1" aria-hidden="true">
-										→
-									</span>
+										<span className="px-1" aria-hidden="true">
+											→
+										</span>
 
-									{item.compartment_name}
-								</ItemDescription>
-							</ItemContent>
+										{item.compartment_name}
+									</ItemDescription>
+								</ItemContent>
 
-							<ItemActions className="shrink-0">
-								<Badge variant="secondary" className="whitespace-nowrap">
-									Qty {item.expected_quantity}
-								</Badge>
-							</ItemActions>
-						</Item>
+								<ItemActions className="shrink-0">
+									<Badge variant="secondary" className="whitespace-nowrap">
+										Qty {item.expected_quantity}
+									</Badge>
+									<DropdownMenu>
+										<DropdownMenuTrigger
+											nativeButton={false}
+											render={<EllipsisVertical />}></DropdownMenuTrigger>
+										<DropdownMenuContent>
+											<DropdownMenuGroup>
+												<DropdownMenuItem>Edit</DropdownMenuItem>
+												<DropdownMenuItem variant="destructive">
+													Delete
+												</DropdownMenuItem>
+											</DropdownMenuGroup>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</ItemActions>
+							</Item>
+						</ItemGroup>
 					)
 				})}
+				<Button className="rounded-sm border-1 bg-red-700">
+					<PlusCircleIcon /> Add Equipment
+				</Button>
 			</ItemGroup>
 		</>
 	)

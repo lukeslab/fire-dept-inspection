@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
+	DropdownMenuItem,
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuLabel,
@@ -26,11 +27,52 @@ export function DropdownMenuCheckboxes({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
-				render={<Button variant="outline">{menuLabel}</Button>}
+				render={
+					<Button
+						className="border-gray-300 rounded-sm border-1"
+						variant="outline">
+						{menuLabel}
+					</Button>
+				}
 			/>
 			<DropdownMenuContent className="w-40">
 				<DropdownMenuGroup>
 					<DropdownMenuLabel>Select 1 or more options</DropdownMenuLabel>
+					<DropdownMenuGroup className="flex-row">
+						<DropdownMenuItem
+							className="inline text-gray-400 underline"
+							render={
+								<Button
+									className="bg-white"
+									onClick={() =>
+										setFilterMenuOptions((previousOptions) => {
+											return previousOptions.map((previousOption) => {
+												return { ...previousOption, checked: true }
+											})
+										})
+									}>
+									Select All
+								</Button>
+							}
+						/>
+						<DropdownMenuItem
+							variant="destructive"
+							className="inline underline"
+							render={
+								<Button
+									className="bg-white"
+									onClick={() =>
+										setFilterMenuOptions((previousOptions) => {
+											return previousOptions.map((previousOption) => {
+												return { ...previousOption, checked: false }
+											})
+										})
+									}>
+									Clear
+								</Button>
+							}
+						/>
+					</DropdownMenuGroup>
 					{filterMenuOptions.map((option) => {
 						return (
 							<DropdownMenuCheckboxItem
