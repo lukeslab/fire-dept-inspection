@@ -37,6 +37,7 @@ interface RigDialogInventoryTabProps {
 	compartments: CompartmentsState
 	equipment: RigEquipment[]
 	equipmentIsLoading: boolean
+	onAddEquipment: () => void
 }
 
 export function RigDialogInventoryTab({
@@ -44,6 +45,7 @@ export function RigDialogInventoryTab({
 	compartments,
 	equipment,
 	equipmentIsLoading,
+	onAddEquipment,
 }: RigDialogInventoryTabProps) {
 	const columnHelper = createColumnHelper<DataTableFeatures, RigEquipment>()
 	const columns = columnHelper.columns([
@@ -106,12 +108,19 @@ export function RigDialogInventoryTab({
 					{/* <FieldLegend>Assigned Equipment</FieldLegend> */}
 					{/* Mobile: below 768px */}
 					<div className="md:hidden">
-						<RigDialogInventoryMobileView equipment={equipment} />
+						<RigDialogInventoryMobileView
+							equipment={equipment}
+							onAddEquipment={onAddEquipment}
+						/>
 					</div>
 
 					{/* Tablet / Desktop: above 786px */}
 					<div className="hidden md:block">
-						<DataTable columns={columns} data={equipment} />
+						<DataTable
+							columns={columns}
+							data={equipment}
+							onAddEquipment={onAddEquipment}
+						/>
 					</div>
 
 					{/* <Table>

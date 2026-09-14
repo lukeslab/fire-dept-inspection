@@ -13,17 +13,17 @@ import {
 
 import type { FilterMenuOption } from "@/components/rigs/RigDialogInventoryMobileView"
 
-interface DropdownMenuCheckboxesProps {
+interface DropdownMenuFilterProps {
 	menuLabel: string
 	filterMenuOptions: FilterMenuOption[]
 	setFilterMenuOptions: React.Dispatch<React.SetStateAction<FilterMenuOption[]>>
 }
 
-export function DropdownMenuCheckboxes({
+export function DropdownMenuFilter({
 	menuLabel,
 	filterMenuOptions,
 	setFilterMenuOptions,
-}: DropdownMenuCheckboxesProps) {
+}: DropdownMenuFilterProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger

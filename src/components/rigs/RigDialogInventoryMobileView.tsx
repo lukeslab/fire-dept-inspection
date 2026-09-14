@@ -23,13 +23,16 @@ import {
 	ItemTitle,
 } from "@/components/ui/item"
 
-import { DropdownMenuCheckboxes } from "@/components/application/DropdownMenuFilter"
+import { DropdownMenuFilter } from "@/components/application/DropdownMenuFilter"
+// import { EquipmentDialog } from "@/components/equipment/EquipmentDialog"
 
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
+
 import type { RigEquipment } from "./RigDialog"
 
 interface RigDialogInventoryMobileViewProps {
 	equipment: RigEquipment[]
+	onAddEquipment: () => void
 }
 
 export interface FilterMenuOption {
@@ -40,6 +43,7 @@ export interface FilterMenuOption {
 
 export function RigDialogInventoryMobileView({
 	equipment,
+	onAddEquipment,
 }: RigDialogInventoryMobileViewProps) {
 	const [filterMenuOptions, setFilterMenuOptions] = useState<
 		FilterMenuOption[]
@@ -59,7 +63,7 @@ export function RigDialogInventoryMobileView({
 		})
 	}, [filterMenuOptions, equipment])
 
-	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
+	// const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
 
 	if (equipment.length === 0) {
 		return (
@@ -75,8 +79,12 @@ export function RigDialogInventoryMobileView({
 
 	return (
 		<>
-			{equipmentDialogIsOpen && <EquipmentDialog />}
+			{/* <EquipmentDialog
+				open={equipmentDialogIsOpen}
+				onOpenChange={setEquipmentDialogIsOpen}
+			/> */}
 
+			{/* <div className={`${equipmentDialogIsOpen && "blur-xs"}`}> */}
 			<ItemGroup className="flex flex-row mb-5">
 				<ItemTitle>Search:</ItemTitle>
 				<Input
@@ -84,13 +92,15 @@ export function RigDialogInventoryMobileView({
 					type="search"
 					placeholder="Enter item name..."
 				/>
-				<Button className="rounded-sm border-1 bg-red-700">
+				<Button
+					className="rounded-sm border-1 bg-red-700"
+					onClick={onAddEquipment}>
 					<PlusCircleIcon /> Add
 				</Button>
 			</ItemGroup>
 			<ItemGroup className="flex flex-row mt-5 mb-5">
 				<ItemTitle>Filters:</ItemTitle>
-				<DropdownMenuCheckboxes
+				<DropdownMenuFilter
 					menuLabel={"Groups"}
 					filterMenuOptions={filterMenuOptions}
 					setFilterMenuOptions={setFilterMenuOptions}
@@ -153,6 +163,7 @@ export function RigDialogInventoryMobileView({
 					<PlusCircleIcon /> Add Equipment
 				</Button>
 			</ItemGroup>
+			{/* </div> */}
 		</>
 	)
 }

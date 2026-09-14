@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
+import type { DialogModes } from "@/components/equipment/EquipmentDialog"
+import { EquipmentDialog } from "@/components/equipment/EquipmentDialog"
+
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
 
 import { type Compartment } from "@/models/Compartment"
@@ -43,7 +46,8 @@ export interface RigEquipment {
 }
 
 interface RigDialogProps {
-	mode: "create" | "view"
+	mode: DialogModes
+	rigs?: Rig[]
 	rigId?: string
 	open: boolean
 	onOpenChange: (open: boolean) => void
@@ -55,12 +59,13 @@ type DialogTab = "info" | "inventory"
 export function RigDialog({
 	mode,
 	open,
+	rigs,
 	rigId,
 	onOpenChange,
 	loadRigs,
 }: RigDialogProps) {
 	const [dialogTab, setDialogTab] = useState<DialogTab>("info")
-	const [dialogMode, setDialogMode] = useState<"create" | "view" | "edit">(mode)
+	const [dialogMode, setDialogMode] = useState<DialogModes>(mode)
 
 	const [rigIsLoading, setRigIsLoading] = useState(true)
 	const [rig, setRig] = useState<Rig>()
@@ -70,6 +75,9 @@ export function RigDialog({
 	)
 
 	const [equipment, setEquipment] = useState<RigEquipment[]>([])
+
+	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
+	const [equipmentDialogMode, setEquipmentDialogMode] = useState<DialogModes>()
 	const [equipmentIsLoading, setEquipmentIsLoading] = useState(true)
 
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -93,94 +101,108 @@ export function RigDialog({
 	}, [open])
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">
-				{dialogMode === "view" && rigIsLoading ? (
-					<Spinner />
-				) : (
-					<>
-						<DialogHeader>
-							<DialogTitle>
-								{dialogMode === "create"
-									? "Add New Rig"
-									: dialogMode === "edit"
-										? `Edit Rig: ${rig?.name}`
-										: `View Rig: ${rig?.name}`}
-							</DialogTitle>
-						</DialogHeader>
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent
+					className={`sm:max-w-4xl overflow-y-auto max-h-[90vh] ${equipmentDialogIsOpen && "blur-xs"}`}>
+					{dialogMode === "view" && rigIsLoading ? (
+						<Spinner />
+					) : (
+						<>
+							<form id="RigDialogForm" onSubmit={handleRigDialogSubmit}>
+								<EquipmentDialog
+									mode={equipmentDialogMode}
+									rig={rig}
+									rigs={rigs}
+									open={equipmentDialogIsOpen}
+									onOpenChange={setEquipmentDialogIsOpen}
+								/>
+								<DialogHeader>
+									<DialogTitle>
+										{dialogMode === "create"
+											? "Add New Rig"
+											: dialogMode === "edit"
+												? `Edit Rig: ${rig?.name}`
+												: `View Rig: ${rig?.name}`}
+									</DialogTitle>
+								</DialogHeader>
 
-						<Tabs
-							defaultValue="info"
-							onValueChange={(value) => setDialogTab(value)}>
-							<TabsList variant="line">
-								<TabsTrigger value="info">Info</TabsTrigger>
-								<TabsTrigger value="inventory">Inventory</TabsTrigger>
-							</TabsList>
-						</Tabs>
+								<Tabs
+									defaultValue="info"
+									onValueChange={(value) => setDialogTab(value)}>
+									<TabsList variant="line">
+										<TabsTrigger value="info">Info</TabsTrigger>
+										<TabsTrigger value="inventory">Inventory</TabsTrigger>
+									</TabsList>
+								</Tabs>
 
-						<form id="RigDialogForm" onSubmit={handleRigDialogSubmit}>
-							<div className=" items-center mt-6">
-								{dialogTab === "info" && (
-									<RigDialogInfoTab mode={dialogMode} rig={rig} />
-								)}
+								<div className=" items-center mt-6">
+									{dialogTab === "info" && (
+										<RigDialogInfoTab mode={dialogMode} rig={rig} />
+									)}
 
-								{dialogTab === "inventory" && (
-									<RigDialogInventoryTab
-										mode={dialogMode}
-										compartments={compartments}
-										equipment={equipment}
-										equipmentIsLoading={equipmentIsLoading}
-									/>
-								)}
+									{dialogTab === "inventory" && (
+										<RigDialogInventoryTab
+											mode={dialogMode}
+											compartments={compartments}
+											equipment={equipment}
+											equipmentIsLoading={equipmentIsLoading}
+											onAddEquipment={() => {
+												setEquipmentDialogIsOpen(true)
+												setEquipmentDialogMode("create")
+											}}
+										/>
+									)}
 
-								{validationErrors.length > 0 && (
-									<ul className="text-destructive text-sm">
-										{validationErrors.map((error, index) => (
-											<li key={index}>{error}</li>
-										))}
-									</ul>
+									{validationErrors.length > 0 && (
+										<ul className="text-destructive text-sm">
+											{validationErrors.map((error, index) => (
+												<li key={index}>{error}</li>
+											))}
+										</ul>
+									)}
+									{requestErrors && (
+										<p className="text-destructive text-sm">{requestErrors}</p>
+									)}
+									{isSuccess && (
+										<p className="text-success text-sm">
+											Rig {dialogMode === "edit" ? "updated" : "created"}{" "}
+											successfully!
+										</p>
+									)}
+								</div>
+							</form>
+							<div>
+								{isSubmitting ? (
+									<Button type="submit" disabled>
+										Submitting...
+									</Button>
+								) : (
+									dialogMode === "edit" && (
+										<Button type="submit" form="RigDialogForm">
+											Submit
+										</Button>
+									)
 								)}
-								{requestErrors && (
-									<p className="text-destructive text-sm">{requestErrors}</p>
+								{dialogMode === "edit" && (
+									<Button
+										variant="secondary"
+										onClick={() => setDialogMode("view")}>
+										Cancel
+									</Button>
 								)}
-								{isSuccess && (
-									<p className="text-success text-sm">
-										Rig {dialogMode === "edit" ? "updated" : "created"}{" "}
-										successfully!
-									</p>
+								{dialogMode === "view" && (
+									<>
+										<Button onClick={() => setDialogMode("edit")}>Edit</Button>
+										<Button variant="destructive">Delete</Button>
+									</>
 								)}
 							</div>
-						</form>
-						<div>
-							{isSubmitting ? (
-								<Button type="submit" disabled>
-									Submitting...
-								</Button>
-							) : (
-								dialogMode === "edit" && (
-									<Button type="submit" form="RigDialogForm">
-										Submit
-									</Button>
-								)
-							)}
-							{dialogMode === "edit" && (
-								<Button
-									variant="secondary"
-									onClick={() => setDialogMode("view")}>
-									Cancel
-								</Button>
-							)}
-							{dialogMode === "view" && (
-								<>
-									<Button onClick={() => setDialogMode("edit")}>Edit</Button>
-									<Button variant="destructive">Delete</Button>
-								</>
-							)}
-						</div>
-					</>
-				)}
-			</DialogContent>
-		</Dialog>
+						</>
+					)}
+				</DialogContent>
+			</Dialog>
+		</>
 	)
 
 	function initializeCompartments(compartments: Compartment[]) {
