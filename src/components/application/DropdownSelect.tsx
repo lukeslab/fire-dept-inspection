@@ -10,19 +10,35 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 
+export interface SelectOption {
+	label: string
+	value: string
+}
+
 interface DropdownSelectItemProps {
 	defaultValue: string
-	items: { label: string; value: string }[]
-	disabled: boolean
+	items: SelectOption[]
+	disabled?: boolean
+	onValueChange?: (item: SelectOption | undefined) => void
 }
 
 export function DropdownSelectItem({
 	defaultValue,
 	items,
-	disabled,
+	disabled = false,
+	onValueChange,
 }: DropdownSelectItemProps) {
 	return (
-		<Select defaultValue={defaultValue} disabled={disabled}>
+		<Select
+			defaultValue={defaultValue}
+			disabled={disabled}
+			onValueChange={(value) => {
+				if (value) {
+					const selectedItem = items.find((item) => item.value === value)
+
+					onValueChange?.(selectedItem)
+				}
+			}}>
 			<SelectTrigger>
 				<SelectValue />
 			</SelectTrigger>
