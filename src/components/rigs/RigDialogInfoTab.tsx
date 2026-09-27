@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState } from "react"
+
 import {
 	Field,
 	FieldDescription,
@@ -8,24 +9,28 @@ import {
 	FieldLegend,
 	FieldSet,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
 
-import { type Rig } from '@/models/Rig';
+import { type Rig } from "@/models/Rig"
 
-import { EmptyOutline } from "@/components/application/EmptyOutline";
+import { EmptyOutline } from "@/components/application/EmptyOutline"
 
-
+import { RigDialogInfoTabCompartments } from "./RigDialogInfoTabCompartments.tsx"
+import type { CompartmentsState } from "./RigDialog"
 
 interface RigDialogInfoTabProps {
-	mode: string,
-	rig?: Rig,
+	mode: string
+	rig?: Rig
+	compartments: CompartmentsState
+	setCompartments: (previousCompartments: CompartmentsState) => void
 }
 
 export function RigDialogInfoTab({
 	mode,
 	rig,
+	compartments,
+	setCompartments,
 }: RigDialogInfoTabProps) {
-
 	console.log(rig)
 
 	const [name, setName] = useState(rig?.name)
@@ -36,88 +41,100 @@ export function RigDialogInfoTab({
 
 	return (
 		<FieldSet>
-			<FieldLegend>
-				Rig Information
-			</FieldLegend>
-			<FieldDescription>
-				{mode === 'create' ? 'Add ' : mode === 'edit' ? `Edit ` : `View `} apparatus name, year, make, model, and specs.
-			</FieldDescription>
+			<FieldSet>
+				<FieldLegend>Rig Information</FieldLegend>
+				<FieldDescription>
+					{mode === "create" ? "Add " : mode === "edit" ? `Edit ` : `View `}{" "}
+					apparatus name, year, make, model, and specs.
+				</FieldDescription>
 
-			<FieldGroup className="grid grid-cols-2 gap-4">
-				{mode === 'create' ? <EmptyOutline></EmptyOutline> : <img src={`${rig?.image_url}`} />}
-				<FieldGroup>
+				<FieldGroup className="grid grid-cols-2 gap-4">
+					{mode === "create" ? (
+						<EmptyOutline></EmptyOutline>
+					) : (
+						<img src={`${rig?.image_url}`} />
+					)}
 					<FieldGroup>
-						<Field orientation="horizontal">
-							{mode === 'view' ? 
-								<div className="flex items-center gap-3">
-									<span className="text-xs uppercase tracking-wide font-semibold">
+						<FieldGroup>
+							<Field orientation="horizontal">
+								{mode === "view" ? (
+									<div className="flex items-center gap-3">
+										<span className="text-xs uppercase tracking-wide font-semibold">
 											Name
-									</span>
+										</span>
 
-									<p className="text-sm font-normal">
-											{name}
-									</p>
-								</div> : 
-							<>
-								<FieldLabel htmlFor="name">Name</FieldLabel>
-								<Input
-									id="name"
-									placeholder="Engine 240"
-									value={name}
-									onChange={event => setName(event.target.value)}
-									readOnly={mode === 'view'}
-								/>
-							</>}
-						</Field>
-					</FieldGroup>
-					<FieldGroup className="grid grid-cols-2 gap-4">
-						<Field orientation="horizontal">
-							{mode === 'view' ? 
-								<div className="flex items-center gap-3">
-									<span className="text-xs uppercase tracking-wide font-semibold">
+										<p className="text-sm font-normal">{name}</p>
+									</div>
+								) : (
+									<>
+										<FieldLabel htmlFor="name">Name</FieldLabel>
+										<Input
+											id="name"
+											placeholder="Engine 240"
+											value={name}
+											onChange={(event) => setName(event.target.value)}
+											readOnly={mode === "view"}
+										/>
+									</>
+								)}
+							</Field>
+						</FieldGroup>
+						<FieldGroup className="grid grid-cols-2 gap-4">
+							<Field orientation="horizontal">
+								{mode === "view" ? (
+									<div className="flex items-center gap-3">
+										<span className="text-xs uppercase tracking-wide font-semibold">
 											Year
-									</span>
+										</span>
 
-									<p className="text-sm font-normal">
-											{year}
-									</p>
-								</div> : 
-							<>
-								<FieldLabel htmlFor="year">Year</FieldLabel>
-								<Input
-									id="year"
-									placeholder="Enter year"
-									value={year}
-									onChange={event => setYear(event.target.value)}
-									readOnly={mode === 'view'}
-								/>
-							</>}
-						</Field>
-						<Field orientation="horizontal">
-							{mode === 'view' ? 
-								<div className="flex items-center gap-3">
-									<span className="text-xs uppercase tracking-wide font-semibold">
+										<p className="text-sm font-normal">{year}</p>
+									</div>
+								) : (
+									<>
+										<FieldLabel htmlFor="year">Year</FieldLabel>
+										<Input
+											id="year"
+											placeholder="Enter year"
+											value={year}
+											onChange={(event) => setYear(event.target.value)}
+											readOnly={mode === "view"}
+										/>
+									</>
+								)}
+							</Field>
+							<Field orientation="horizontal">
+								{mode === "view" ? (
+									<div className="flex items-center gap-3">
+										<span className="text-xs uppercase tracking-wide font-semibold">
 											Make
-									</span>
+										</span>
 
-									<p className="text-sm font-normal">
-											{make}
-									</p>
-								</div> : 
-							<>
-								<FieldLabel htmlFor="make">Make</FieldLabel>
-								<Input
-									id="make"
-									placeholder="Engine 240"
-									value={make}
-									onChange={event => setMake(event.target.value)}
-									readOnly={mode === 'view'}
-								/>
-							</>}
-						</Field>
+										<p className="text-sm font-normal">{make}</p>
+									</div>
+								) : (
+									<>
+										<FieldLabel htmlFor="make">Make</FieldLabel>
+										<Input
+											id="make"
+											placeholder="Engine 240"
+											value={make}
+											onChange={(event) => setMake(event.target.value)}
+											readOnly={mode === "view"}
+										/>
+									</>
+								)}
+							</Field>
+						</FieldGroup>
 					</FieldGroup>
 				</FieldGroup>
-			</FieldGroup>
+			</FieldSet>
+			<FieldSet>
+				<RigDialogInfoTabCompartments
+					mode={mode}
+					compartments={compartments}
+					setCompartments={setCompartments}
+				/>
+			</FieldSet>
 		</FieldSet>
 	)
-}  
+}

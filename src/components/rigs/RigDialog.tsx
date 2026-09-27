@@ -138,7 +138,12 @@ export function RigDialog({
 
 								<div className=" items-center mt-6">
 									{dialogTab === "info" && (
-										<RigDialogInfoTab mode={dialogMode} rig={rig} />
+										<RigDialogInfoTab
+											mode={dialogMode}
+											rig={rig}
+											compartments={compartments}
+											setCompartments={setCompartments}
+										/>
 									)}
 
 									{dialogTab === "inventory" && (

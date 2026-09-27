@@ -8,12 +8,10 @@ import {
 } from "@/components/ui/accordion"
 import {
 	Field,
-	//   FieldDescription,
+	FieldDescription,
 	FieldGroup,
 	FieldLabel,
 	FieldLegend,
-	//   FieldSeparator,
-	//   FieldLegend,
 	FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -25,24 +23,27 @@ import { type Rig } from "@/models/Rig"
 
 import { type CompartmentsState } from "./RigDialog"
 
-interface RigDialogCompartmentsTabProps {
+interface RigDialogInfoTabCompartmentsProps {
 	mode: string
 	rig?: Rig
 	compartments: CompartmentsState
 	setCompartments: (previousCompartments: CompartmentsState) => void
 }
 
-export function RigDialogCompartmentsTab({
+export function RigDialogInfoTabCompartments({
 	mode,
 	compartments,
 	setCompartments,
-}: RigDialogCompartmentsTabProps) {
+}: RigDialogInfoTabCompartmentsProps) {
 	console.log("compartments are: ", compartments)
 
 	return (
 		<Accordion className="max-w-lg">
 			<FieldSet>
 				<FieldLegend>Compartment Groups</FieldLegend>
+				<FieldDescription>
+					View available appartus compartments.
+				</FieldDescription>
 				{COMPARTMENT_GROUPS.map((group) => {
 					return (
 						<>
