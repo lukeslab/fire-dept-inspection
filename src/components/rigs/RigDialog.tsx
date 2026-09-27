@@ -64,6 +64,11 @@ export function RigDialog({
 	onOpenChange,
 	loadRigs,
 }: RigDialogProps) {
+	if (!rigs) {
+		console.log("Rigs is empty")
+		return
+	}
+
 	const [dialogTab, setDialogTab] = useState<DialogTab>("info")
 	const [dialogMode, setDialogMode] = useState<DialogModes>(mode)
 
@@ -74,11 +79,11 @@ export function RigDialog({
 		{} as CompartmentsState,
 	)
 
-	const [equipment, setEquipment] = useState<RigEquipment[]>([])
+	// const [equipment, setEquipment] = useState<RigEquipment[]>([])
 
 	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
-	const [equipmentDialogMode, setEquipmentDialogMode] = useState<DialogModes>()
-	const [equipmentIsLoading, setEquipmentIsLoading] = useState(true)
+	const [equipmentDialogMode, setEquipmentDialogMode] =
+		useState<DialogModes>("view")
 
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 	const [validationErrors, setValidationErrors] = useState<string[]>([])
@@ -89,7 +94,9 @@ export function RigDialog({
 		if (dialogMode === "view" && open && rigId) {
 			loadRig(rigId)
 		}
-		dialogTab === "inventory" && equipmentIsLoading && loadEquipmentById(rigId)
+		// dialogTab === "inventory" &&
+		// 	equipmentIsLoading &&
+		// 	loadEquipmentByRigId(rigId)
 	}, [dialogMode, dialogTab, open, rigId])
 
 	// Clean up success / fail messaging on dialog close.
@@ -150,8 +157,9 @@ export function RigDialog({
 										<RigDialogInventoryTab
 											mode={dialogMode}
 											compartments={compartments}
-											equipment={equipment}
-											equipmentIsLoading={equipmentIsLoading}
+											rigId={rigId}
+											// equipment={equipment}
+											// equipmentIsLoading={equipmentIsLoading}
 											onAddEquipment={() => {
 												setEquipmentDialogIsOpen(true)
 												setEquipmentDialogMode("create")
@@ -257,23 +265,6 @@ export function RigDialog({
 		setCompartments(initializeCompartments(data.compartments))
 
 		setRigIsLoading(false)
-	}
-
-	async function loadEquipmentById(rigId: string) {
-		const response = await fetch(`/api/equipment?rigId=${rigId}`)
-
-		if (!response.ok) {
-			setRequestErrors("Failed to get equipment from server.")
-
-			return
-		}
-
-		const data = await response.json()
-		console.log(data)
-
-		setValidationErrors([])
-		setEquipment(data)
-		setEquipmentIsLoading(false)
 	}
 
 	async function handleRigDialogSubmit(

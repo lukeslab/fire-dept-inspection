@@ -2,8 +2,6 @@ import { useState, useMemo } from "react"
 
 import { DropdownSelectItem } from "@/components/application/DropdownSelect"
 
-import { Spinner } from "@/components/ui/spinner"
-import { Item } from "@/components/ui/item"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import {
@@ -16,30 +14,20 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
-export function SwitchDemo() {
-	return (
-		<div className="flex items-center space-x-2">
-			<Switch id="airplane-mode" />
-			<Label htmlFor="airplane-mode">Airplane Mode</Label>
-		</div>
-	)
-}
-
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
 
-import { type Compartment } from "@/models/Compartment"
 import type { Rig } from "@/models/Rig"
 
-export type DialogModes = "view" | "edit" | "create"
-
 import type { SelectOption } from "@/components/application/DropdownSelect"
+
+export type DialogModes = "view" | "edit" | "create"
 
 interface EquipmentDialogProps {
 	mode: DialogModes
 	open: boolean
 	rigs: Rig[]
 	name?: string
-	rig: Rig
+	rig?: Rig
 	expected_quantity?: number
 	compartment_name?: string
 	compartment_group?: string
@@ -61,10 +49,10 @@ export function EquipmentDialog({
 	const [selectedRig, setSelectedRig] = useState(rig)
 	const [expectedQuantity, setExpectedQuantity] = useState(expected_quantity)
 	const [selectedGroup, setSelectedGroup] = useState<SelectOption | null>()
-	const [compartmentName, setCompartmentName] = useState(compartment_name)
+	const [selectedCompartment, setSelectedCompartment] =
+		useState<SelectOption | null>()
 
-	console.log(rig)
-	const dropdownSelectRigs = rigs.map((rig) => ({
+	const selectRigOptions: SelectOption[] = rigs.map((rig) => ({
 		label: rig.id,
 		value: rig.name,
 	}))
@@ -74,25 +62,24 @@ export function EquipmentDialog({
 		value: group.label,
 	}))
 
-	// const { compartments } = selectedRig
-	// const SelectCompartmentOptions = ""
+	const selectCompartmentOptions: SelectOption[] = useMemo(() => {
+		if (!selectedGroup) return []
 
-	const selectCompartmentOptions: SelectOption[] | undefined = useMemo(() => {
-		if (selectedGroup) {
-			const compartments = rig.compartments.filter(
-				(compartment) => compartment.group_key === selectedGroup.label,
-			)
+		const compartments = rig.compartments.filter(
+			(compartment) => compartment.group_key === selectedGroup.label,
+		)
 
-			return compartments.map((compartment) => {
-				return {
-					label: compartment.id,
-					value: compartment.name,
-				} as SelectOption
-			})
-		}
+		return compartments.map((compartment) => {
+			return {
+				label: compartment.id,
+				value: compartment.name,
+			}
+		})
 	}, [selectedGroup])
 
-	// console.log(selectedGroup, compartmentOptions)
+	const [hasFunction, setHasFunction] = useState(false)
+
+	console.log(selectedGroup, selectedCompartment, hasFunction)
 
 	return (
 		<>
@@ -153,32 +140,43 @@ export function EquipmentDialog({
 							{rig ? (
 								<DropdownSelectItem
 									defaultValue={rig.name}
-									items={dropdownSelectRigs}
+									items={selectRigOptions}
 									disabled={true}
 								/>
 							) : (
 								<DropdownSelectItem
-									defaultValue={"Please select a Rig"}
-									items={dropdownSelectRigs}
+									defaultValue={"Select Rig"}
+									items={selectRigOptions}
 								/>
 							)}
 
 							<DropdownSelectItem
-								defaultValue={"Please select a group"}
+								defaultValue={"Select group"}
 								items={selectGroupOptions}
 								onValueChange={setSelectedGroup}
 							/>
 							{selectedGroup && (
 								<DropdownSelectItem
-									defaultValue={"Please select a compartment"}
+									placeholder={"Select compartment"}
+									defaultValue={"Select compartment"}
 									items={selectCompartmentOptions}
+									onValueChange={setSelectedCompartment}
 								/>
 							)}
 
 							<div className="flex items-center space-x-3">
 								<Label htmlFor="has_function">Has Function?</Label>
-								<Switch id="has_function" />
+								<Switch
+									id="has_function"
+									onCheckedChange={() =>
+										setHasFunction((previousValue) => !previousValue)
+									}
+								/>
 							</div>
+						</FieldGroup>
+						<FieldGroup className="flex-row justify-center">
+							<Button type="submit">Submit</Button>
+							<Button variant="secondary">Cancel</Button>
 						</FieldGroup>
 					</FieldSet>
 				</DialogContent>

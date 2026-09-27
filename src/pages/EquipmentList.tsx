@@ -1,151 +1,110 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
-import { useRigs } from "@/hooks/hooks";
-import { AppPage } from "@/components/application/AppPage";
-import { PageHeader } from "@/components/application/PageHeader";
+import { AppPage } from "@/components/application/AppPage"
+import { PageHeader } from "@/components/application/PageHeader"
+import { Spinner } from "@/components/ui/spinner"
+import { FieldSet } from "@/components/ui/field"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { RigEquipment } from "@/components/rigs/RigDialog"
+
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { BadgeCheckIcon, ChevronRightIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
+	EquipmentDialog,
+	type DialogModes,
+} from "@/components/equipment/EquipmentDialog"
+import { EquipmentTableView } from "@/components/equipment/EquipmentTableView"
+import { RigDialogInventoryMobileView } from "@/components/equipment/EquipmentMobileView"
 
-import { COMPARTMENT_GROUPS} from "@/lib/db/compartmentGroups"
-
-interface Equipment{
-    name: string,
-    function: boolean,
-    quantity: number,
-    compartment_id: string
-}
+// get all equipment.
+// filters by Rig, by Group
+// same list as mobile view in rig?
 
 export default function EquipmentList() {
+	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
+	const [equipmentDialogMode, setEquipmentDialogMode] = useState<DialogModes>()
 
-    const { rigs, isLoading: isLoadingRigs, error: loadRigsError, loadRigs } = useRigs();
-    const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
-    const [ viewMode, setViewMode ] = useState<'catalog' | 'by-rig'>('by-rig')
-    const [equipmentData, setEquipmentData] = useState<any[]>([])
+	const [equipment, setEquipment] = useState<RigEquipment[]>()
+	const [equipmentIsLoading, setEquipmentIsLoading] = useState(true)
 
+	useEffect(() => {
+		equipmentIsLoading && loadAllEquipment()
+	}, [equipment, equipmentIsLoading]) // equipment dep added incase we add a new piece it should reload.
 
-    useEffect( () => {
-        loadRigs()
-        // if (viewMode === 'by-rig') loadEquipmentByRig()
-        // else loadEquipmentCatalog()
-    }, [viewMode])
+	if (!equipment) return
 
-    return (
-        <AppPage>
-            <PageHeader
-                title="Equipment"
-                description="Manage equipment assignments."
-            />
-            {rigs.map( rig => (
-                 <Item 
-                    key={rig.id} 
-                    role="listitem"
-                    className="items-stretch py-4"
-                >
-                    <ItemMedia
-                        className="w-52 shrink-0 self-stretch"
-                    >
-                        <img
-                        src={rig.image_url}
-                        alt={`image of ${rig.name}`}
-                        className="h-full w-full object-contain"
-                        />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle>{rig.name}</ItemTitle>
-                        <ItemDescription>Description for {rig.name}</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        <Button>View</Button>
-                    </ItemActions>
-                </Item>
+	return (
+		<AppPage>
+			<PageHeader
+				title="Equipment"
+				description="Manage equipment assignments."
+			/>
+			<>
+				{equipmentIsLoading ? (
+					<Spinner />
+				) : (
+					<FieldSet>
+						{/* <EquipmentDialog
+							mode={equipmentDialogMode}
+							open={equipmentDialogIsOpen}
+							onOpenChange={setEquipmentDialogIsOpen}
+						/> */}
+						{/* Mobile: below 768px */}
+						<div className="md:hidden">
+							<RigDialogInventoryMobileView
+								equipment={equipment}
+								onAddEquipment={() => {
+									setEquipmentDialogIsOpen(true)
+									setEquipmentDialogMode("create")
+								}}
+							/>
+						</div>
 
-            // <Accordion 
-            //     className="max-w-lg"
-            //     multiple={true}
-            //     onValueChange={(value) => loadEquipmentByRig(value)}
-            //     >
-            //     <Card className="w-full max-w-sm">
-            //         <CardHeader>
-            //             <CardTitle>{rig.name}</CardTitle>
-            //             <CardDescription>Compartments</CardDescription>
-            //         </CardHeader>
-            //         <CardContent>
-            //         {COMPARTMENT_GROUPS.map( group => (
-            //             <AccordionItem value={group?.key}>
-            //                 <AccordionTrigger>{group.label}</AccordionTrigger>
-            //                 <AccordionContent>
-            //                     <Item variant="outline">
-            //                         <ItemContent>
-            //                             <ItemTitle>Haligan</ItemTitle>
-            //                             <ItemDescription>
-            //                             Forcible entry tool.
-            //                             </ItemDescription>
-            //                         </ItemContent>
-            //                         <ItemActions>
-            //                             <Button variant="outline" size="sm">
-            //                             Action
-            //                             </Button>
-            //                         </ItemActions>
-            //                     </Item>
-            //                 </AccordionContent>
-            //             </AccordionItem>
-            //         ))}
-            //         </CardContent>
-            //     </Card>
-            // </Accordion>
-            ))}
-            {/* <Accordion>
-                <AccordionItem value="support">
-                    <AccordionTrigger>
-                        Unassigned
-                    </AccordionTrigger>
-                    <AccordionContent>
-                       <Item variant="outline">
-                            <ItemContent>
-                                <ItemTitle>Haligan</ItemTitle>
-                                <ItemDescription>
-                                Forcible entry tool.
-                                </ItemDescription>
-                            </ItemContent>
-                            <ItemActions>
-                                <Button variant="outline" size="sm">
-                                Action
-                                </Button>
-                            </ItemActions>
-                        </Item>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion> */}
-        </AppPage>
-    );
+						{/* Tablet / Desktop: above 786px */}
+						<div className="hidden md:block">
+							<EquipmentTableView equipment={equipment} />
+						</div>
+						<div>
+							{/* <Pagination>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious href="#" />
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#">1</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#" isActive>
+										2
+									</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#">3</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationEllipsis />
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationNext href="#" />
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination> */}
+						</div>
+					</FieldSet>
+				)}
+			</>
+		</AppPage>
+	)
 
-    async function loadEquipmentByRig(rigId: string | string[]) {
-        const id = Array.isArray(rigId) ? rigId[0] : rigId;
-        const equipmentByRig = await fetch(`/api/equipment?id=${id}`)
+	async function loadAllEquipment() {
+		const response = await fetch(`/api/equipment?all=true`)
 
-        return equipmentByRig
+		if (!response.ok) {
+			// handle server failed error
 
-    }
+			return
+		}
 
-
-    // This function is for the catalog view.
-    async function loadEquipmentCatalog() {
-
-    }
+		const data = await response.json()
+		setEquipment(data)
+		setEquipmentIsLoading(false)
+	}
 }

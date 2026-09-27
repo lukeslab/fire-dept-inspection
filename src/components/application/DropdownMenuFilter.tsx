@@ -1,5 +1,3 @@
-import { useState, useMemo } from "react"
-
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -11,7 +9,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import type { FilterMenuOption } from "@/components/rigs/RigDialogInventoryMobileView"
+import type { FilterMenuOption } from "@/components/equipment/EquipmentMobileView"
 
 interface DropdownMenuFilterProps {
 	menuLabel: string
@@ -29,7 +27,7 @@ export function DropdownMenuFilter({
 			<DropdownMenuTrigger
 				render={
 					<Button
-						className="border-gray-300 rounded-sm border-1"
+						className="border-gray-300 rounded-sm border"
 						variant="outline">
 						{menuLabel}
 					</Button>

@@ -1,3 +1,13 @@
+import { useState } from "react"
+import {
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination"
 import {
 	columnFilteringFeature,
 	columnVisibilityFeature,
@@ -22,10 +32,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-
 // New in v9: declare the features this table uses — anything you don't
 // register is tree-shaken out of the bundle.
-export const features = tableFeatures({
+
+const features = tableFeatures({
 	columnFilteringFeature,
 	columnVisibilityFeature,
 	rowPaginationFeature,
@@ -48,12 +58,30 @@ export function DataTable<TData extends RowData>({
 	columns,
 	data,
 }: DataTableProps<TData>) {
+	const [pageActive, setPageActive] = useState(1)
 	const table = useTable({
 		features,
 		data,
 		columns,
 	})
 
+	let pageComponents = []
+	for (let i = 0; i < table.getPageCount(); i++) {
+		pageComponents.push(
+			<PaginationItem key={i}>
+				<PaginationLink
+					isActive={pageActive === i}
+					onClick={() => {
+						table.setPageIndex(i)
+						setPageActive(i)
+					}}>
+					{i + 1}
+				</PaginationLink>
+			</PaginationItem>,
+		)
+	}
+
+	console.log(table)
 	return (
 		<div className="overflow-hidden rounded-md border">
 			<Table>
@@ -94,6 +122,34 @@ export function DataTable<TData extends RowData>({
 					)}
 				</TableBody>
 			</Table>
+			<Pagination>
+				<PaginationContent>
+					<PaginationItem>
+						<PaginationPrevious
+							onClick={() => {
+								if (table.getCanPreviousPage()) {
+									table.previousPage()
+									setPageActive((prevPage) => --prevPage)
+								}
+							}}
+						/>
+					</PaginationItem>
+					{pageComponents}
+					<PaginationItem>
+						<PaginationEllipsis />
+					</PaginationItem>
+					<PaginationItem>
+						<PaginationNext
+							onClick={() => {
+								if (table.getCanNextPage()) {
+									table.nextPage()
+									setPageActive((prevPage) => ++prevPage)
+								}
+							}}
+						/>
+					</PaginationItem>
+				</PaginationContent>
+			</Pagination>
 		</div>
 	)
 }

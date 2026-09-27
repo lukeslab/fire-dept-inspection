@@ -1,103 +1,40 @@
-import { MoreHorizontal } from "lucide-react"
-import { createColumnHelper } from "@tanstack/react-table"
+import { useState, useEffect } from "react"
 
 import { Spinner } from "@/components/ui/spinner"
+import { FieldSet } from "@/components/ui/field"
 import {
-	Field,
-	FieldLegend,
-	//   FieldDescription,
-	FieldGroup,
-	FieldLabel,
-	//   FieldSeparator,
-	//   FieldLegend,
-	FieldSet,
-} from "@/components/ui/field"
-import { Button } from "@/components/ui/button"
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination"
 
-import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
+import { EquipmentTableView } from "../equipment/EquipmentTableView"
 
 import type { CompartmentsState, RigEquipment } from "./RigDialog"
-import {
-	type DataTableFeatures,
-	DataTable,
-} from "./RigDialogInventoryTabDataTable"
-import { RigDialogInventoryMobileView } from "./RigDialogInventoryMobileView"
+
+import { RigDialogInventoryMobileView } from "../equipment/EquipmentMobileView"
 
 interface RigDialogInventoryTabProps {
 	mode: string
 	compartments: CompartmentsState
-	equipment: RigEquipment[]
-	equipmentIsLoading: boolean
+	rigId?: string
 	onAddEquipment: () => void
 }
 
 export function RigDialogInventoryTab({
-	mode,
-	compartments,
-	equipment,
-	equipmentIsLoading,
+	rigId,
 	onAddEquipment,
 }: RigDialogInventoryTabProps) {
-	const columnHelper = createColumnHelper<DataTableFeatures, RigEquipment>()
-	const columns = columnHelper.columns([
-		columnHelper.accessor("name", {
-			header: "Item Name",
-		}),
-		columnHelper.accessor("group_key", {
-			header: "Compartment Group",
-			cell: ({ row }) => {
-				const group = COMPARTMENT_GROUPS.find(
-					(group) => row.getValue("group_key") === group.key,
-				)
+	const [equipment, setEquipment] = useState<RigEquipment[]>([])
+	const [equipmentIsLoading, setEquipmentIsLoading] = useState(true)
 
-				return <div>{group.label}</div>
-			},
-		}),
-		columnHelper.accessor("compartment_name", {
-			header: "Compartment",
-		}),
-		columnHelper.accessor("hasfunction", {
-			header: "Has Function",
-		}),
-		columnHelper.display({
-			id: "actions",
-			cell: ({ row }) => {
-				const equipment = row.original
-
-				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger
-							render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
-							<span className="sr-only">Open menu</span>
-							<MoreHorizontal className="h-4 w-4" />
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuGroup>
-								<DropdownMenuLabel>Actions</DropdownMenuLabel>
-								<DropdownMenuItem onClick={() => console.log(equipment.name)}>
-									Copy payment ID
-								</DropdownMenuItem>
-							</DropdownMenuGroup>
-							<DropdownMenuSeparator />
-							<DropdownMenuGroup>
-								<DropdownMenuItem>View customer</DropdownMenuItem>
-								<DropdownMenuItem>View payment details</DropdownMenuItem>
-							</DropdownMenuGroup>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				)
-			},
-		}),
-	])
+	useEffect(() => {
+		rigId && equipmentIsLoading && loadEquipmentByRigId(rigId)
+	}, [rigId, equipmentIsLoading])
 
 	return (
 		<>
@@ -105,7 +42,6 @@ export function RigDialogInventoryTab({
 				<Spinner />
 			) : (
 				<FieldSet>
-					{/* <FieldLegend>Assigned Equipment</FieldLegend> */}
 					{/* Mobile: below 768px */}
 					<div className="md:hidden">
 						<RigDialogInventoryMobileView
@@ -116,88 +52,53 @@ export function RigDialogInventoryTab({
 
 					{/* Tablet / Desktop: above 786px */}
 					<div className="hidden md:block">
-						<DataTable
-							columns={columns}
-							data={equipment}
-							onAddEquipment={onAddEquipment}
-						/>
+						<EquipmentTableView equipment={equipment} />
 					</div>
-
-					{/* <Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Equipment</TableHead>
-								<TableHead>Compartment Group</TableHead>
-								<TableHead>Compartment</TableHead>
-								<TableHead>Has Function</TableHead>
-								<TableHead>Expected Quantity</TableHead>
-								{mode === "edit" && <TableHead>Actions</TableHead>}
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{equipment.map((equipment) => {
-								const group = COMPARTMENT_GROUPS.find(
-									(group) => equipment.group_key === group.key,
-								)
-
-								return (
-									<TableRow>
-										<TableCell>{equipment.name}</TableCell>
-										<TableCell>{`${group.label} `}</TableCell>
-										<TableCell>{`${equipment.compartment_name}`}</TableCell>
-										<TableCell>
-											{equipment.hasfunction ? "Yes" : "No"}
-										</TableCell>
-										<TableCell>{}</TableCell>
-									</TableRow>
-								)
-							})}
-						</TableBody>
-					</Table> */}
-					{/* {
-						COMPARTMENT_GROUPS.map((group) => {
-							return (
-								<Item className="border-1 border-mist-100 p-0 rounded-l">
-									<ItemHeader className="bg-mist-100 p-2 rounded-l">
-										{group.label}
-									</ItemHeader>
-									<ItemContent>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead>Compartment</TableHead>
-													<TableHead>Equipment</TableHead>
-													<TableHead>Functional</TableHead>
-													<TableHead>Quantity</TableHead>
-													{mode === "edit" && <TableHead>Actions</TableHead>}
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{equipment.map((equipment) => {
-													
-													if (equipment.group_key === group.key ) {
-														return (
-															<TableRow>
-																<TableCell>{equipment.compartment_name}</TableCell>
-																<TableCell>{equipment.name}</TableCell>
-																<TableCell>
-																	{equipment.hasfunction ? "test" : "N/A"}
-																</TableCell>
-																<TableCell>{}</TableCell>
-															</TableRow>
-														)
-													}
-
-												})}
-											</TableBody>
-										</Table>
-									</ItemContent>
-								</Item>
-							)
-						})
-					} */}
+					<div>
+						{/* <Pagination>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious href="#" />
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#">1</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#" isActive>
+										2
+									</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink href="#">3</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationEllipsis />
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationNext href="#" />
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination> */}
+					</div>
 				</FieldSet>
 			)}
 		</>
 	)
+
+	async function loadEquipmentByRigId(rigId: string) {
+		const response = await fetch(`/api/equipment?rigId=${rigId}`)
+
+		if (!response.ok) {
+			// setRequestErrors("Failed to get equipment from server.")
+
+			return
+		}
+
+		const data = await response.json()
+		console.log(data)
+
+		// setValidationErrors([])
+		setEquipment(data)
+		setEquipmentIsLoading(false)
+	}
 }

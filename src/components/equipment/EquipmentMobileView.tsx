@@ -28,7 +28,7 @@ import { DropdownMenuFilter } from "@/components/application/DropdownMenuFilter"
 
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
 
-import type { RigEquipment } from "./RigDialog"
+import type { RigEquipment } from "../rigs/RigDialog"
 
 interface RigDialogInventoryMobileViewProps {
 	equipment: RigEquipment[]

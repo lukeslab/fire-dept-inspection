@@ -36,7 +36,8 @@ export default async function handler(
 			case "GET":
 				if (request.query.rigId)
 					return await getEquipmentByRigID(request, response)
-				else return
+				else if (request.query.all)
+					return await getAllEquipment(request, response)
 
 			case "POST":
 				return await createEquipment(request, response)
@@ -60,6 +61,43 @@ export default async function handler(
 		return response.status(500).json({
 			error: "An unexpected server error occurred.",
 		})
+	}
+
+	async function getAllEquipment(
+		request: VercelRequest,
+		response: VercelResponse,
+	) {
+		const equipment = await sql`
+			SELECT
+        equipment.id,
+        equipment.name,
+        equipment.hasfunction,
+        equipment.compartment_id,
+        compartments.name AS compartment_name,
+        compartments.group_key,
+        rigs.name AS rig_name 
+			FROM equipment
+			JOIN compartments
+			ON compartments.id = equipment.compartment_id
+			JOIN rigs
+        ON rigs.id = compartments.rig_id
+      ORDER BY
+        CASE compartments.group_key
+          WHEN 'front_bumper' THEN 1
+          WHEN 'cab' THEN 2
+          WHEN 'driver_side' THEN 3
+          WHEN 'officer_side' THEN 4
+          WHEN 'rear' THEN 5
+          WHEN 'top' THEN 6
+          WHEN 'undercarriage' THEN 7
+          WHEN 'other' THEN 8
+          ELSE 99
+        END,
+      compartments.position ASC,
+      equipment.name ASC;
+		`
+		console.log(equipment)
+		return response.status(200).json(equipment)
 	}
 
 	async function getEquipmentByRigID(
@@ -104,6 +142,7 @@ export default async function handler(
       compartments.position ASC,
       equipment.name ASC;
     `
+		console.log(equipment)
 		return response.status(200).json(equipment)
 	}
 

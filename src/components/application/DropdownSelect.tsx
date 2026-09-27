@@ -1,6 +1,3 @@
-import { useState, useMemo } from "react"
-
-import { Button } from "@/components/ui/button"
 import {
 	Select,
 	SelectContent,
@@ -16,6 +13,7 @@ export interface SelectOption {
 }
 
 interface DropdownSelectItemProps {
+	placeholder?: string
 	defaultValue: string
 	items: SelectOption[]
 	disabled?: boolean
@@ -23,6 +21,7 @@ interface DropdownSelectItemProps {
 }
 
 export function DropdownSelectItem({
+	placeholder,
 	defaultValue,
 	items,
 	disabled = false,
@@ -40,7 +39,7 @@ export function DropdownSelectItem({
 				}
 			}}>
 			<SelectTrigger>
-				<SelectValue />
+				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>
 			<SelectContent>
 				<SelectGroup>
