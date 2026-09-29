@@ -20,7 +20,7 @@ import { RigDialogInventoryMobileView } from "@/components/equipment/EquipmentMo
 
 export default function EquipmentList() {
 	const [equipmentDialogIsOpen, setEquipmentDialogIsOpen] = useState(false)
-	const [equipmentDialogMode, setEquipmentDialogMode] = useState<DialogModes>()
+	const [equipmentDialogMode, setEquipmentDialogMode] = useState<DialogModes>("create")
 
 	const [equipment, setEquipment] = useState<RigEquipment[]>()
 	const [equipmentIsLoading, setEquipmentIsLoading] = useState(true)
@@ -42,11 +42,11 @@ export default function EquipmentList() {
 					<Spinner />
 				) : (
 					<FieldSet>
-						{/* <EquipmentDialog
+						<EquipmentDialog
 							mode={equipmentDialogMode}
 							open={equipmentDialogIsOpen}
 							onOpenChange={setEquipmentDialogIsOpen}
-						/> */}
+						/>
 						{/* Mobile: below 768px */}
 						<div className="md:hidden">
 							<RigDialogInventoryMobileView
