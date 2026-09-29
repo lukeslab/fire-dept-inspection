@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
 import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
+import { useRigs } from "@/hooks/hooks"
+import { useRig } from "@/hooks/useRig"
 
 import type { Rig } from "@/models/Rig"
 
@@ -25,7 +27,7 @@ export type DialogModes = "view" | "edit" | "create"
 interface EquipmentDialogProps {
 	mode: DialogModes
 	open: boolean
-	rigs: Rig[]
+	rigs?: Rig[]
 	name?: string
 	rig?: Rig
 	expected_quantity?: number
@@ -43,16 +45,25 @@ export function EquipmentDialog({
 	rig,
 	expected_quantity,
 	compartment_name,
-	group_key,
 }: EquipmentDialogProps) {
 	const [itemName, setItemName] = useState(name)
-	const [selectedRig, setSelectedRig] = useState(rig)
+	const [chosenRigId, setChosenRigId] = useState<string | undefined>()
+	const selectedRigId = rig?.id ?? chosenRigId
 	const [expectedQuantity, setExpectedQuantity] = useState(expected_quantity)
-	const [selectedGroup, setSelectedGroup] = useState<SelectOption | null>()
+	const [selectedGroup, setSelectedGroup] = useState<SelectOption | null>(null)
 	const [selectedCompartment, setSelectedCompartment] =
-		useState<SelectOption | null>()
+		useState<SelectOption | null>(null)
 
-	const selectRigOptions: SelectOption[] = rigs.map((rig) => ({
+	// Hooks are always called. Their enabled flags determine which requests run.
+	const { rigs: fetchedRigs, error: rigsError } = useRigs(open && !rig && !rigs)
+	const { rig: fetchedRig, isLoading: rigIsLoading, error: rigError } =
+		useRig(selectedRigId, open && !!selectedRigId && rig?.id !== selectedRigId)
+	const availableRigs = rigs ?? fetchedRigs
+	const selectedRig = rig?.id === selectedRigId
+		? rig
+		: fetchedRig?.id === selectedRigId ? fetchedRig : null
+
+	const selectRigOptions: SelectOption[] = availableRigs.map((rig) => ({
 		label: rig.id,
 		value: rig.name,
 	}))
@@ -63,9 +74,9 @@ export function EquipmentDialog({
 	}))
 
 	const selectCompartmentOptions: SelectOption[] = useMemo(() => {
-		if (!selectedGroup) return []
+		if (!selectedGroup || !selectedRig) return []
 
-		const compartments = rig.compartments.filter(
+		const compartments = selectedRig.compartments.filter(
 			(compartment) => compartment.group_key === selectedGroup.label,
 		)
 
@@ -75,15 +86,20 @@ export function EquipmentDialog({
 				value: compartment.name,
 			}
 		})
-	}, [selectedGroup])
+	}, [selectedGroup, selectedRig])
 
 	const [hasFunction, setHasFunction] = useState(false)
 
-	console.log(selectedGroup, selectedCompartment, hasFunction)
-
 	return (
 		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
+			<Dialog open={open} onOpenChange={(nextOpen) => {
+				if (!nextOpen) {
+					setChosenRigId(undefined)
+					setSelectedGroup(null)
+					setSelectedCompartment(null)
+				}
+				onOpenChange(nextOpen)
+			}}>
 				<DialogContent className="w-7/8">
 					<DialogHeader>
 						<DialogTitle>{`${mode} Item${mode === "edit" ? name : ""}`}</DialogTitle>
@@ -140,27 +156,41 @@ export function EquipmentDialog({
 							{rig ? (
 								<DropdownSelectItem
 									defaultValue={rig.name}
-									items={selectRigOptions}
+									items={[{ label: rig.id, value: rig.name }]}
 									disabled={true}
 								/>
 							) : (
 								<DropdownSelectItem
-									defaultValue={"Select Rig"}
+									defaultValue={""}
+									placeholder="Select rig"
 									items={selectRigOptions}
+									onValueChange={(option) => {
+										setChosenRigId(option?.label)
+										setSelectedGroup(null)
+										setSelectedCompartment(null)
+									}}
 								/>
 							)}
+							{rigsError && <p className="text-destructive">{rigsError}</p>}
+							{rigError && <p className="text-destructive">{rigError}</p>}
+							{rigIsLoading && <p>Loading compartments...</p>}
 
-							<DropdownSelectItem
+							{selectedRig && <DropdownSelectItem
+								key={selectedRigId}
 								defaultValue={"Select group"}
 								items={selectGroupOptions}
-								onValueChange={setSelectedGroup}
-							/>
+								onValueChange={(option) => {
+									setSelectedGroup(option ?? null)
+									setSelectedCompartment(null)
+								}}
+							/>}
 							{selectedGroup && (
 								<DropdownSelectItem
+									key={`${selectedRigId}-${selectedGroup.label}`}
 									placeholder={"Select compartment"}
-									defaultValue={"Select compartment"}
+									defaultValue={""}
 									items={selectCompartmentOptions}
-									onValueChange={setSelectedCompartment}
+									onValueChange={(option) => setSelectedCompartment(option ?? null)}
 								/>
 							)}
 
