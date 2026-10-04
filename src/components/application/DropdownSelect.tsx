@@ -14,7 +14,7 @@ export interface SelectOption {
 
 interface DropdownSelectItemProps {
 	placeholder?: string
-	defaultValue: string
+	defaultValue?: string | undefined
 	items: SelectOption[]
 	disabled?: boolean
 	onValueChange?: (item: SelectOption | undefined) => void

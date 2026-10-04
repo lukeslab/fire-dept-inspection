@@ -116,14 +116,14 @@ export function RigDialog({
 						<Spinner />
 					) : (
 						<>
+							{/* Equipment dialog had to go here instead of RigInventoryTab otherwise it was not centered in the RigDialog modal. */}
+							<EquipmentDialog
+								mode={equipmentDialogMode}
+								rig={rig}
+								open={equipmentDialogIsOpen}
+								onOpenChange={setEquipmentDialogIsOpen}
+							/>
 							<form id="RigDialogForm" onSubmit={handleRigDialogSubmit}>
-								<EquipmentDialog
-									mode={equipmentDialogMode}
-									rig={rig}
-									rigs={rigs}
-									open={equipmentDialogIsOpen}
-									onOpenChange={setEquipmentDialogIsOpen}
-								/>
 								<DialogHeader>
 									<DialogTitle>
 										{dialogMode === "create"

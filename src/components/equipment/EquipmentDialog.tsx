@@ -1,7 +1,11 @@
 import { useState, useMemo } from "react"
 
-import { DropdownSelectItem } from "@/components/application/DropdownSelect"
+import { useRigs } from "@/hooks/useRigs"
 
+import {
+	DropdownSelectItem,
+	type SelectOption,
+} from "@/components/application/DropdownSelect"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import {
@@ -18,14 +22,11 @@ import { COMPARTMENT_GROUPS } from "@/lib/db/compartmentGroups"
 
 import type { Rig } from "@/models/Rig"
 
-import type { SelectOption } from "@/components/application/DropdownSelect"
-
 export type DialogModes = "view" | "edit" | "create"
 
 interface EquipmentDialogProps {
 	mode: DialogModes
 	open: boolean
-	rigs: Rig[]
 	name?: string
 	rig?: Rig
 	expected_quantity?: number
@@ -38,48 +39,55 @@ export function EquipmentDialog({
 	mode,
 	open,
 	onOpenChange,
-	rigs,
 	name,
 	rig,
 	expected_quantity,
 	compartment_name,
 	group_key,
 }: EquipmentDialogProps) {
-	const [itemName, setItemName] = useState(name)
-	const [selectedRig, setSelectedRig] = useState(rig)
-	const [expectedQuantity, setExpectedQuantity] = useState(expected_quantity)
-	const [selectedGroup, setSelectedGroup] = useState<SelectOption | null>()
-	const [selectedCompartment, setSelectedCompartment] =
-		useState<SelectOption | null>()
+	const { rigs, isLoading } = useRigs()
 
+	const [itemName, setItemName] = useState(name)
+	const [expectedQuantity, setExpectedQuantity] = useState(expected_quantity)
+
+	const [selectedRig, setSelectedRig] = useState<Rig | undefined>(rig)
 	const selectRigOptions: SelectOption[] = rigs.map((rig) => ({
 		label: rig.id,
 		value: rig.name,
 	}))
 
+	const [selectedGroup, setSelectedGroup] = useState<SelectOption | null>()
 	const selectGroupOptions = COMPARTMENT_GROUPS.map((group) => ({
 		label: group.key,
 		value: group.label,
 	}))
 
-	const selectCompartmentOptions: SelectOption[] = useMemo(() => {
-		if (!selectedGroup) return []
+	const [selectedCompartment, setSelectedCompartment] =
+		useState<SelectOption | null>()
+	const selectCompartmentOptions: SelectOption[] | undefined = useMemo(() => {
+		if (selectedRig && selectedGroup) {
+			const compartments = selectedRig.compartments.filter(
+				(compartment) => compartment.group_key === selectedGroup.label,
+			)
 
-		const compartments = rig.compartments.filter(
-			(compartment) => compartment.group_key === selectedGroup.label,
-		)
-
-		return compartments.map((compartment) => {
-			return {
-				label: compartment.id,
-				value: compartment.name,
-			}
-		})
-	}, [selectedGroup])
+			return compartments.map((compartment) => {
+				return {
+					label: compartment.id,
+					value: compartment.name,
+				}
+			})
+		}
+	}, [selectedRig, selectedGroup])
 
 	const [hasFunction, setHasFunction] = useState(false)
 
-	console.log(selectedGroup, selectedCompartment, hasFunction)
+	console.log(
+		selectedRig,
+		selectedGroup,
+		selectedCompartment,
+		selectCompartmentOptions,
+		hasFunction,
+	)
 
 	return (
 		<>
@@ -136,29 +144,25 @@ export function EquipmentDialog({
 								)}
 							</Field>
 
-							{/* If coming from rigDialog, preset the rig dropdown to the selected Rig and disable. */}
-							{rig ? (
-								<DropdownSelectItem
-									defaultValue={rig.name}
-									items={selectRigOptions}
-									disabled={true}
-								/>
-							) : (
-								<DropdownSelectItem
-									defaultValue={"Select Rig"}
-									items={selectRigOptions}
-								/>
-							)}
+							<DropdownSelectItem
+								placeholder={"Select Rig"}
+								defaultValue={selectedRig?.name}
+								items={selectRigOptions}
+								onValueChange={(selectedRig) => {
+									const k = rigs.find((rig) => rig.id === selectedRig?.label)
+									setSelectedRig(k)
+								}}
+								disabled={rig && true}
+							/>
 
 							<DropdownSelectItem
-								defaultValue={"Select group"}
+								placeholder={"Select group"}
 								items={selectGroupOptions}
 								onValueChange={setSelectedGroup}
 							/>
 							{selectedGroup && (
 								<DropdownSelectItem
 									placeholder={"Select compartment"}
-									defaultValue={"Select compartment"}
 									items={selectCompartmentOptions}
 									onValueChange={setSelectedCompartment}
 								/>
@@ -176,7 +180,9 @@ export function EquipmentDialog({
 						</FieldGroup>
 						<FieldGroup className="flex-row justify-center">
 							<Button type="submit">Submit</Button>
-							<Button variant="secondary">Cancel</Button>
+							<Button variant="secondary" onClick={() => onOpenChange(false)}>
+								Cancel
+							</Button>
 						</FieldGroup>
 					</FieldSet>
 				</DialogContent>

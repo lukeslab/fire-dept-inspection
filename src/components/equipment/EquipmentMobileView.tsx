@@ -159,7 +159,9 @@ export function RigDialogInventoryMobileView({
 						</ItemGroup>
 					)
 				})}
-				<Button className="rounded-sm border-1 bg-red-700">
+				<Button
+					className="rounded-sm border-1 bg-red-700"
+					onClick={onAddEquipment}>
 					<PlusCircleIcon /> Add Equipment
 				</Button>
 			</ItemGroup>
