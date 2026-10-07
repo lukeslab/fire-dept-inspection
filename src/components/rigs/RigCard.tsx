@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,13 @@ export function RigCard({ rig, rigs, onDeleteError, loadRigs }: RigCardProps) {
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [imageLoading, setImageLoading] = useState(true)
+
+	const [isInspectStarted, setIsInspectStarted] = useState(false)
+
+	// useEffect(() => {
+	// 	if (isInspectStarted)
+	// 		startInspection(rig.id, "01550b4f-edc9-449f-8005-a8032bcbd4ca")
+	// }, [isInspectStarted])
 
 	return (
 		<>
@@ -65,11 +72,39 @@ export function RigCard({ rig, rigs, onDeleteError, loadRigs }: RigCardProps) {
 					<ItemDescription>Description for {rig.name}</ItemDescription>
 				</ItemContent>
 				<ItemActions>
-					<Button onClick={() => setIsDialogOpen(true)}>View</Button>
+					<Button onClick={startInspection}>Inspect</Button>
+					<Button variant="secondary" onClick={() => setIsDialogOpen(true)}>
+						View
+					</Button>
 				</ItemActions>
 			</Item>
 		</>
 	)
+
+	async function startInspection(rigId, inspectorId) {
+		setIsInspectStarted(true)
+
+		try {
+			const options = {
+				method: "POST",
+				payload: {
+					rigId,
+					inspectorId,
+				},
+			}
+
+			const response = await fetch("/api/inspections", options)
+
+			if (!response.ok) {
+				const error = await response.json()
+				throw new Error(error.error || "Server failed to create inspection")
+			}
+		} catch (err) {
+			console.log(err)
+		} finally {
+			setIsInspectStarted(false)
+		}
+	}
 
 	async function deleteRig(rigId: string) {
 		setIsDeleting(true)
