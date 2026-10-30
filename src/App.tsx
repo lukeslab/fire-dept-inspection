@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout"
 import { PlaceholderPage } from "@/pages/PlaceholderPage"
 import RigList from "@/pages/RigList"
 import EquipmentList from "./pages/EquipmentList"
+import InspectionsList from "./pages/InspectionList"
 
 export default function App() {
 	return (
@@ -24,15 +25,7 @@ export default function App() {
 
 					<Route path="equipment" element={<EquipmentList />} />
 
-					<Route
-						path="inspections"
-						element={
-							<PlaceholderPage
-								title="Inspections"
-								description="Start and review apparatus inspections."
-							/>
-						}
-					/>
+					<Route path="inspections" element={<InspectionsList />} />
 
 					<Route
 						path="service-alerts"
