@@ -12,9 +12,11 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@/components/ui/item"
+import { Button } from "@/components/ui/button"
+import InspectionListBoard from "@/components/inspections/inspectionListBoard"
 
 const data = {
-	inProgress: [
+	"In Progress": [
 		{
 			id: 1,
 			rigName: "Engine 241",
@@ -36,7 +38,7 @@ const data = {
 			totalItems: 40,
 		},
 	],
-	completed: [
+	Completed: [
 		{
 			id: 3,
 			rigName: "Engine 241",
@@ -49,7 +51,7 @@ const data = {
 			issues: 0,
 		},
 	],
-	issues: [
+	"Completed with Issues": [
 		{
 			id: 4,
 			rigName: "Engine 241",
@@ -86,36 +88,7 @@ export default function InspectionList() {
 				/>
 			</Item>
 
-			<div className="flex flex-row gap-4">
-				<ItemGroup className="bg-gray-200 flex-1">
-					<ItemTitle>
-						In Progress <span>{data["inProgress"].length}</span>
-					</ItemTitle>
-					{data["inProgress"].map((inspection) => (
-						<Item key={inspection.id}>
-							<ItemMedia></ItemMedia>
-							<ItemTitle>{inspection.rigName}</ItemTitle>
-							<ItemDescription>{inspection.rigModel}</ItemDescription>
-							<ItemContent>
-								<Item>
-									<ItemTitle>Inspector</ItemTitle>
-									<ItemDescription>{inspection.inspector}</ItemDescription>
-								</Item>
-							</ItemContent>
-						</Item>
-					))}
-				</ItemGroup>
-				<ItemGroup className="bg-gray-200 flex-1">
-					<ItemTitle>
-						Completed <span>{data["completed"].length}</span>
-					</ItemTitle>
-				</ItemGroup>
-				<ItemGroup className="bg-gray-200 flex-1">
-					<ItemTitle>
-						Completed with Issues <span>{data["inProgress"].length}</span>
-					</ItemTitle>
-				</ItemGroup>
-			</div>
+			<InspectionListBoard data={data} />
 		</AppPage>
 	)
 }
