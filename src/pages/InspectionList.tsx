@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 import { AppPage } from "@/components/layout/AppPage"
 import { PageHeader } from "@/components/application/PageHeader"
 
@@ -86,17 +88,27 @@ export default function InspectionList() {
 				description="Start, continue, and review rig inspections."
 			/>
 
-			<Item>
-				<ItemTitle>Search:</ItemTitle>
-				<Input
-					name="inspection-search"
-					className="w-fit border-gray-300 rounded-sm border-1 pl-2"
-					type="search"
-					placeholder="Search by inspector or rig name1"
-				/>
-			</Item>
+			<ItemGroup className="flex-row">
+				<Item>
+					<ItemTitle>Search:</ItemTitle>
+					<Input
+						name="inspection-search"
+						className="w-fit border-gray-300 rounded-sm border-1 pl-2"
+						type="search"
+						placeholder="Search by inspector or rig name1"
+					/>
+				</Item>
+
+				<Item>
+					<Button>
+						<Link to="/rigs">New Inspection</Link>
+					</Button>
+				</Item>
+			</ItemGroup>
 
 			<InspectionListBoard data={data} />
 		</AppPage>
 	)
 }
+
+function redirectToRigsPage() {}

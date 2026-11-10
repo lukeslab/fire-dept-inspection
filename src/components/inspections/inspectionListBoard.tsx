@@ -28,8 +28,8 @@ export default function InspectionListBoard({
 
 	return (
 		<div className="flex flex-row gap-4">
-			{boards.map((board) => (
-				<ItemGroup className="bg-gray-200 flex-1 p-5">
+			{boards.map((board, index) => (
+				<ItemGroup key={index} className="bg-gray-200 flex-1 p-5">
 					<ItemTitle>
 						{/* <p>{board}</p> */}
 						{board} <span>{data[board].length}</span>

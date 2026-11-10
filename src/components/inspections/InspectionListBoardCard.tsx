@@ -44,11 +44,9 @@ export default function InspectionCard({
 			</div>
 			<ItemSeparator />
 			<Progress value={(inspection.itemsChecked / inspection.totalItems) * 100}>
-				<div>
-					<ProgressLabel>
-						{inspection.itemsChecked} of {inspection.totalItems} items checked
-					</ProgressLabel>
-				</div>
+				<ProgressLabel>
+					{inspection.itemsChecked} of {inspection.totalItems} items checked
+				</ProgressLabel>
 				<ProgressValue />
 			</Progress>
 			<ItemActions>

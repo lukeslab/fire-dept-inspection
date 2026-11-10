@@ -30,7 +30,7 @@ export default function RigList() {
 				{deleteRigError && <ErrorMessage message={deleteRigError} />}
 				<PageHeader
 					title="Rigs"
-					description="Manage department apparatus and compartments."
+					description="View department apparatus, compartments, and equipment. Select inspect to start a rig inspection."
 					actions={
 						<Button onClick={() => setCreateDialogOpen(true)}>Add Rig</Button>
 					}
