@@ -24,7 +24,9 @@ export default function InspectionCard({
 }) {
 	return (
 		<Item className="bg-white" key={inspection.id}>
-			<ItemMedia>?</ItemMedia>
+			<ItemMedia variant="image">
+				<img src={inspection.rigImageUrl} />
+			</ItemMedia>
 			<div>
 				<ItemTitle>{inspection.rigName}</ItemTitle>
 				<ItemDescription>{inspection.rigModel}</ItemDescription>
@@ -42,9 +44,11 @@ export default function InspectionCard({
 			</div>
 			<ItemSeparator />
 			<Progress value={(inspection.itemsChecked / inspection.totalItems) * 100}>
-				<ProgressLabel>
-					{inspection.itemsChecked} of {inspection.totalItems} items checked
-				</ProgressLabel>
+				<div>
+					<ProgressLabel>
+						{inspection.itemsChecked} of {inspection.totalItems} items checked
+					</ProgressLabel>
+				</div>
 				<ProgressValue />
 			</Progress>
 			<ItemActions>

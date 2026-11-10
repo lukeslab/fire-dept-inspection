@@ -1,10 +1,11 @@
 import { ItemGroup, ItemTitle } from "@/components/ui/item"
-import InspectionCard from "./InspectionCard"
+import InspectionCard from "./InspectionListBoardCard"
 
 export type InspectionRecord = {
 	id: number
 	rigName: string
 	rigModel: string
+	rigImageUrl: string
 	inspector: string
 	startTime: number
 	endTime: 0 | number

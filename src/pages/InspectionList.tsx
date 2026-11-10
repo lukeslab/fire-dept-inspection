@@ -21,6 +21,8 @@ const data = {
 			id: 1,
 			rigName: "Engine 241",
 			rigModel: "2021 Seagrave",
+			rigImageUrl:
+				"https://www.purchasefd.com/content/apparatus/E241%2003%202025.jfif",
 			inspector: "Luke Padawer",
 			startTime: 1792540800000,
 			endTime: 0,
@@ -30,6 +32,8 @@ const data = {
 		{
 			id: 2,
 			rigName: "Engine 240",
+			rigImageUrl:
+				"https://www.purchasefd.com/content/apparatus/R30%20030%202025.jfif",
 			rigModel: "2021 Seagrave",
 			inspector: "John Wick",
 			startTime: 1792540700000,
@@ -43,6 +47,8 @@ const data = {
 			id: 3,
 			rigName: "Engine 241",
 			rigModel: "2021 Seagrave",
+			rigImageUrl:
+				"https://www.purchasefd.com/content/apparatus/E241%2003%202025.jfif",
 			inspector: "Luke Padawer",
 			startTime: 1792540600000,
 			endTime: 1792540650000,
@@ -56,6 +62,8 @@ const data = {
 			id: 4,
 			rigName: "Engine 241",
 			rigModel: "2021 Seagrave",
+			rigImageUrl:
+				"https://www.purchasefd.com/content/apparatus/E241%2003%202025.jfif",
 			inspector: "Luke Padawer",
 			startTime: 1792540040000,
 			endTime: 1792540090000,
