@@ -110,5 +110,3 @@ export default function InspectionList() {
 		</AppPage>
 	)
 }
-
-function redirectToRigsPage() {}

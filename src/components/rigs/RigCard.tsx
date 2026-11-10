@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
@@ -24,12 +25,14 @@ interface RigCardProps {
 }
 
 export function RigCard({ rig, rigs, onDeleteError, loadRigs }: RigCardProps) {
+	const navigate = useNavigate()
+
 	const [isDeleting, setIsDeleting] = useState(false)
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [imageLoading, setImageLoading] = useState(true)
 
-	const [isInspectStarted, setIsInspectStarted] = useState(false)
+	const [isCreatingNewInspection, setIsCreatingNewInspection] = useState(false)
 
 	// useEffect(() => {
 	// 	if (isInspectStarted)
@@ -72,7 +75,11 @@ export function RigCard({ rig, rigs, onDeleteError, loadRigs }: RigCardProps) {
 					<ItemDescription>Description for {rig.name}</ItemDescription>
 				</ItemContent>
 				<ItemActions>
-					<Button onClick={startInspection}>Inspect</Button>
+					<Button
+						disabled={isCreatingNewInspection}
+						onClick={() => startNewInspection(rig.id)}>
+						{isCreatingNewInspection ? "Please wait..." : "Inspect"}
+					</Button>
 					<Button variant="secondary" onClick={() => setIsDialogOpen(true)}>
 						View
 					</Button>
@@ -81,28 +88,36 @@ export function RigCard({ rig, rigs, onDeleteError, loadRigs }: RigCardProps) {
 		</>
 	)
 
-	async function startInspection(rigId, inspectorId) {
-		setIsInspectStarted(true)
+	async function startNewInspection(rigId) {
+		// need to make this dynamic based on user session / log in
+		const inspectorId = "01550b4f-edc9-449f-8005-a8032bcbd4ca"
+
+		setIsCreatingNewInspection(true)
 
 		try {
 			const options = {
 				method: "POST",
-				payload: {
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
 					rigId,
 					inspectorId,
-				},
+				}),
 			}
 
 			const response = await fetch("/api/inspections", options)
+			const { data } = await response.json()
 
 			if (!response.ok) {
-				const error = await response.json()
-				throw new Error(error.error || "Server failed to create inspection")
+				const { error } = await response.json()
+				throw new Error(`Failed to start new inspection: ${error}`)
 			}
+			navigate(`/inspections/${data[0].inspectionId}`)
 		} catch (err) {
 			console.log(err)
 		} finally {
-			setIsInspectStarted(false)
+			setIsCreatingNewInspection(false)
 		}
 	}
 

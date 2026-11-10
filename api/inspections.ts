@@ -50,12 +50,14 @@ async function createInspection(request, response) {
 	const query = await sql`
     INSERT INTO inspections (rig_id, inspector_id)
     VALUES 
-      ('${rigId}', '${inspectorId}')
+			(${rigId}, ${inspectorId})
+		RETURNING 
+			id AS "inspectionId"
   `
 
 	console.log(query)
 
 	return response
 		.status(200)
-		.json({ message: "Inspection created successfully." })
+		.json({ message: "Inspection created successfully.", data: query })
 }
