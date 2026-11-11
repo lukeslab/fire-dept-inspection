@@ -5,6 +5,7 @@ import { PlaceholderPage } from "@/pages/PlaceholderPage"
 import RigList from "@/pages/RigList"
 import EquipmentList from "./pages/EquipmentList"
 import InspectionsList from "./pages/InspectionList"
+import InspectionSheet from "./pages/InspectionSheet"
 
 export default function App() {
 	return (
@@ -26,6 +27,11 @@ export default function App() {
 					<Route path="equipment" element={<EquipmentList />} />
 
 					<Route path="inspections" element={<InspectionsList />} />
+
+					<Route
+						path="inspections/:inspectionId"
+						element={<InspectionSheet />}
+					/>
 
 					<Route
 						path="service-alerts"
