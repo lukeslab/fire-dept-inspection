@@ -17,7 +17,7 @@ export default async function handler(
 		console.log(request.query)
 		switch (request.method) {
 			case "GET":
-				return
+				return await getAllInspections(request, response)
 
 			case "POST":
 				return await createInspection(request, response)
@@ -55,9 +55,37 @@ async function createInspection(request, response) {
 			id AS "inspectionId"
   `
 
-	console.log(query)
-
 	return response
 		.status(200)
 		.json({ message: "Inspection created successfully.", data: query })
+}
+
+async function getAllInspections(request, response) {
+	const query = await sql`
+		SELECT 
+			i.id,
+			i.status,
+			i.passed,
+			r.name AS "rigName",
+			r.model as "rigModel",
+			r.image_url AS "rigImageUrl",
+			CONCAT(u.first_name, ' ', u.last_name) AS "inspector", 
+			i.started_at AS "startTime",
+			i.completed_at AS "endTime",
+			i.items_checked AS "itemsChecked",
+			i.total_items AS "totalItems"
+		FROM inspections i
+		LEFT JOIN rigs r
+				ON i.rig_id = r.id
+		LEFT JOIN users u
+				ON i.inspector_id = u.id
+		ORDER BY 
+			i.started_at DESC,
+			r.name DESC
+	`
+
+	return response.status(200).json({
+		message: `Returning ${query.length} inspections records.`,
+		data: query,
+	})
 }

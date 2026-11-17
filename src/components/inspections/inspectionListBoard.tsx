@@ -3,6 +3,8 @@ import InspectionCard from "./InspectionListBoardCard"
 
 export type InspectionRecord = {
 	id: number
+	status: Text
+	passed: boolean
 	rigName: string
 	rigModel: string
 	rigImageUrl: string
@@ -39,16 +41,6 @@ export default function InspectionListBoard({
 					))}
 				</ItemGroup>
 			))}
-			{/* <ItemGroup className="bg-gray-200 flex-1">
-				<ItemTitle>
-					Completed <span>{data["completed"].length}</span>
-				</ItemTitle>
-			</ItemGroup>
-			<ItemGroup className="bg-gray-200 flex-1">
-				<ItemTitle>
-					Completed with Issues <span>{data["inProgress"].length}</span>
-				</ItemTitle>
-			</ItemGroup> */}
 		</div>
 	)
 }

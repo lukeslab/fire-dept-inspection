@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/item"
 import { Button } from "@/components/ui/button"
 import InspectionListBoard from "@/components/inspections/inspectionListBoard"
+import { useEffect, useState } from "react"
 
 const data = {
 	"In Progress": [
@@ -81,6 +82,17 @@ const data = {
 }
 
 export default function InspectionList() {
+	const [isLoadingInspections, setIsLoadingInspections] = useState(false)
+	const [inspections, setInspections] = useState({
+		"In Progress": [],
+		Completed: [],
+		"Completed with Issues": [],
+	})
+
+	useEffect(() => {
+		loadInspections()
+	}, [])
+
 	return (
 		<AppPage>
 			<PageHeader
@@ -106,7 +118,41 @@ export default function InspectionList() {
 				</Item>
 			</ItemGroup>
 
-			<InspectionListBoard data={data} />
+			<InspectionListBoard data={inspections} />
 		</AppPage>
 	)
+
+	async function loadInspections() {
+		setIsLoadingInspections(true)
+
+		try {
+			const response = await fetch("api/inspections")
+
+			if (!response.ok) {
+				throw new Error(`Error fetching inspections: ${response.statusText}`)
+			}
+
+			const { data } = await response.json()
+
+			const inspectionsRecords = {
+				"In Progress": data.filter(
+					(inspection) => inspection.status === "in_progress",
+				),
+				Completed: data.filter(
+					(inspection) =>
+						inspection.status === "completed" && inspection.passed,
+				),
+				"Completed with Issues": data.filter(
+					(inspection) =>
+						inspection.status === "completed" && !inspection.passed,
+				),
+			}
+
+			setInspections(inspectionsRecords)
+		} catch (error) {
+			console.error(error)
+		} finally {
+			setIsLoadingInspections(false)
+		}
+	}
 }
