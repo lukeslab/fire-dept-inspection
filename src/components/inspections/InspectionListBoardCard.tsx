@@ -16,14 +16,17 @@ import {
 } from "@/components/ui/progress"
 
 import type { InspectionRecord } from "./inspectionListBoard"
+import { useNavigate } from "react-router-dom"
 
 export default function InspectionCard({
 	inspection,
 }: {
 	inspection: InspectionRecord
 }) {
+	const navigate = useNavigate()
+
 	return (
-		<Item className="bg-white" key={inspection.id}>
+		<Item className="bg-white" key={inspection.id} data-id={inspection.id}>
 			<ItemMedia variant="image">
 				<img src={inspection.rigImageUrl} />
 			</ItemMedia>
@@ -50,7 +53,9 @@ export default function InspectionCard({
 				<ProgressValue />
 			</Progress>
 			<ItemActions>
-				<Button>{inspection.endTime ? "View" : "Continue"}</Button>
+				<Button onClick={() => navigate(`./${inspection.id}`)}>
+					{inspection.endTime ? "View" : "Continue"}
+				</Button>
 			</ItemActions>
 		</Item>
 	)

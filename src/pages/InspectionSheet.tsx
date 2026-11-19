@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+import { useParams } from "react-router"
 import { AppPage } from "@/components/application/AppPage"
 import { PageHeader } from "@/components/application/PageHeader"
 
@@ -10,6 +12,17 @@ export default function InspectionSheet({
 	title,
 	description,
 }: InspectionSheetProps) {
+	const { inspectionId } = useParams()
+
+	// console.log(inspectionId)
+
+	const [isLoadingInspection, setIsLoadingInspection] = useState(false)
+	const [inspection, setInspection] = useState(false)
+
+	useEffect(() => {
+		getInspectionById(inspectionId)
+	}, [])
+
 	return (
 		<AppPage>
 			<PageHeader title={title} description={description} />
@@ -21,4 +34,28 @@ export default function InspectionSheet({
 			</div>
 		</AppPage>
 	)
+
+	async function getInspectionById(id) {
+		setIsLoadingInspection(true)
+
+		try {
+			const response = await fetch(
+				`/api/inspections?id=${encodeURIComponent(id)}`,
+			)
+
+			if (!response.ok) {
+				throw new Error(`Error fetching inspection: ${response.statusText}`)
+			}
+
+			const { data } = await response.json()
+
+			console.log(data)
+
+			setInspection(data)
+		} catch (error) {
+			console.error(error)
+		} finally {
+			setIsLoadingInspection(false)
+		}
+	}
 }

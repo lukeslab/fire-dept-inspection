@@ -30,7 +30,12 @@ export default function App() {
 
 					<Route
 						path="inspections/:inspectionId"
-						element={<InspectionSheet />}
+						element={
+							<InspectionSheet
+								title="Inspection Sheet"
+								description="Inspecting rig"
+							/>
+						}
 					/>
 
 					<Route
