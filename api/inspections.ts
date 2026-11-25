@@ -97,28 +97,58 @@ async function getInspectionById(request, response) {
 	const id = request.query.id
 
 	const [inspection] = await sql`
-		SELECT 
+		SELECT
 			i.id,
 			i.status,
 			i.passed,
 			r.name AS "rigName",
-			r.model as "rigModel",
+			r.model AS "rigModel",
 			r.image_url AS "rigImageUrl",
-			CONCAT(u.first_name, ' ', u.last_name) AS "inspector", 
+			CONCAT(u.first_name, ' ', u.last_name) AS "inspector",
 			i.started_at AS "startTime",
 			i.completed_at AS "endTime",
 			i.items_checked AS "itemsChecked",
-			i.total_items AS "totalItems"
+			i.total_items AS "totalItems",
+
+			COALESCE(
+				(
+					SELECT jsonb_agg(
+						jsonb_build_object(
+							'id', c.id,
+							'name', c.name,
+							'groupKey', c.group_key,
+							'position', c.position,
+							'items', COALESCE(
+								(
+									SELECT jsonb_agg(
+										jsonb_build_object(
+											'id', e.id,
+											'equipmentName', e.name,
+											'expectedQuantity', e.expected_quantity,
+											'requiresFunctionalCheck', e.hasfunction
+										)
+										ORDER BY e.name, e.id
+									)
+									FROM equipment e
+									WHERE e.compartment_id = c.id
+								),
+								'[]'::jsonb
+							)
+						)
+						ORDER BY c.group_key, c.position, c.id
+					)
+					FROM compartments c
+					WHERE c.rig_id = i.rig_id
+				),
+				'[]'::jsonb
+			) AS compartments
+
 		FROM inspections i
 		LEFT JOIN rigs r
-				ON i.rig_id = r.id
+			ON i.rig_id = r.id
 		LEFT JOIN users u
-				ON i.inspector_id = u.id
+			ON i.inspector_id = u.id
 		WHERE i.id = ${id}
-		ORDER BY 
-			i.started_at DESC,
-			r.name DESC
-		LIMIT 1
 	`
 
 	console.log(inspection)
