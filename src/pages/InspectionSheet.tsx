@@ -34,9 +34,13 @@ export default function InspectionSheet() {
 	const [isLoadingInspection, setIsLoadingInspection] = useState(true)
 	const [inspection, setInspection] = useState()
 
+	const [inspectionResults, setInspectionResults] = useState([])
+
 	useEffect(() => {
 		getInspectionById(inspectionId)
 	}, [])
+
+	console.log(inspectionResults)
 
 	if (isLoadingInspection) {
 		return (
@@ -149,8 +153,8 @@ export default function InspectionSheet() {
 										<TableHeader>
 											<TableRow>
 												<TableHead>Item name</TableHead>
-												<TableHead>Expected quantity</TableHead>
-												<TableHead>Actual quantity</TableHead>
+												<TableHead>Expected qty</TableHead>
+												<TableHead>Actual qty</TableHead>
 												<TableHead>Functional Check</TableHead>
 												<TableHead>Comments</TableHead>
 											</TableRow>
@@ -162,16 +166,22 @@ export default function InspectionSheet() {
 													<TableCell>{item.equipmentName}</TableCell>
 													<TableCell>{item.expectedQuantity}</TableCell>
 													<TableCell>
-														<Input type="number" min={0} />
+														<Input
+															type="number"
+															min={0}
+															onChange={(event) =>
+																changeQty(item.id, event.target.value)
+															}
+														/>
 													</TableCell>
 													<TableCell>
 														{item.requiresFunctionalCheck ? (
 															<ToggleGroup>
-																<ToggleGroupItem className="data-[pressed]:bg-green-700 data-[pressed]:text-white">
+																<ToggleGroupItem className="data-pressed:bg-green-700 data-pressed:text-white">
 																	<Check />
 																</ToggleGroupItem>
 																<ToggleGroupItem
-																	className="data-[pressed]:bg-red-700 data-[pressed]:text-white"
+																	className="data-pressed:bg-red-700 data-pressed:text-white"
 																	value="n">
 																	<X />
 																</ToggleGroupItem>
@@ -193,46 +203,6 @@ export default function InspectionSheet() {
 							</AccordionItem>
 						))}
 					</Accordion>
-					{/* <div className="rounded-xl border border-dashed bg-card px-6 py-16 text-center">
-						{inspection.compartments.map((compartment) => {
-							return (
-								<div className="flex-row">
-									<div>
-										<h2>{compartment.name}</h2>
-									</div>
-									<table>
-										<thead>
-											<tr>
-												<th>Name</th>
-												<th>Expected Quantity</th>
-												<th>Actual Quantity</th>
-												<th>Functional Check</th>
-											</tr>
-										</thead>
-										<tbody>
-											{compartment.items.map((item) => {
-												return (
-													<tr>
-														<td>{item.equipmentName}</td>
-														<td>{item.expectedQuantity}</td>
-														<td>
-															<input className="border-2 w-20" type="number" />
-														</td>
-														<td>
-															<input
-																type="checkbox"
-																disabled={item.requiresFunctionalCheck}
-															/>
-														</td>
-													</tr>
-												)
-											})}
-										</tbody>
-									</table>
-								</div>
-							)
-						})}
-					</div> */}
 				</>
 			)}
 		</AppPage>
@@ -254,11 +224,34 @@ export default function InspectionSheet() {
 
 			console.log(data)
 
+			setInspectionResults(
+				data.compartments.flatMap((compartment) =>
+					compartment.items.map((item) => ({
+						inspectionId: data.id,
+						itemId: item.id,
+						expectedQuantity: item.expectedQuantity,
+						actualQuantity: null,
+						isFunctional: null,
+						comments: null,
+					})),
+				),
+			)
+
 			setInspection(data)
 		} catch (error) {
 			console.error(error)
 		} finally {
 			setIsLoadingInspection(false)
 		}
+	}
+
+	async function changeQty(itemId, value) {
+		setInspectionResults((prev) =>
+			prev.map((item) =>
+				item.itemId === itemId
+					? { ...item, actualQuantity: Number(value) }
+					: item,
+			),
+		)
 	}
 }
