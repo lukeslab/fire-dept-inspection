@@ -40,6 +40,10 @@ export default function InspectionSheet() {
 		getInspectionById(inspectionId)
 	}, [])
 
+	// useEffect(() => {
+	// 	checkForIssues()
+	// }, [inspectionResults])
+
 	console.log(inspectionResults)
 
 	if (isLoadingInspection) {
@@ -72,6 +76,7 @@ export default function InspectionSheet() {
 						description={inspection.rigName}
 					/>
 
+					{/* Inspection meta data */}
 					<Card>
 						<CardContent className="grid gap-6 p-4 md:grid-cols-[240px_1fr] md:p-6">
 							<img
@@ -143,6 +148,7 @@ export default function InspectionSheet() {
 						</CardContent>
 					</Card>
 
+					{/* Inspection worksheet */}
 					<Accordion multiple={true}>
 						{inspection.compartments.map((compartment) => (
 							<AccordionItem key={compartment.id} value={compartment.id}>
@@ -156,6 +162,7 @@ export default function InspectionSheet() {
 												<TableHead>Expected qty</TableHead>
 												<TableHead>Actual qty</TableHead>
 												<TableHead>Functional Check</TableHead>
+												<TableHead>Issues Found</TableHead>
 												<TableHead>Comments</TableHead>
 											</TableRow>
 										</TableHeader>
@@ -176,21 +183,39 @@ export default function InspectionSheet() {
 													</TableCell>
 													<TableCell>
 														{item.requiresFunctionalCheck ? (
-															<ToggleGroup>
-																<ToggleGroupItem className="data-pressed:bg-green-700 data-pressed:text-white">
+															<ToggleGroup
+																defaultValue={null}
+																onValueChange={(value) =>
+																	changeIsFunctional(
+																		item.id,
+																		Boolean(Number(value)),
+																	)
+																}>
+																<ToggleGroupItem
+																	className="data-pressed:bg-green-700 data-pressed:text-white"
+																	value="1">
 																	<Check />
 																</ToggleGroupItem>
 																<ToggleGroupItem
 																	className="data-pressed:bg-red-700 data-pressed:text-white"
-																	value="n">
+																	value="0">
 																	<X />
 																</ToggleGroupItem>
-																{/* <Button>Yes</Button>
-																<Button>No</Button> */}
 															</ToggleGroup>
 														) : (
 															<p>Not required</p>
 														)}
+													</TableCell>
+													<TableCell>
+														<ul>
+															{inspectionResults
+																.filter(
+																	(result) => item.id === result.itemId,
+																)[0]
+																.issuesFound.map((issue) => (
+																	<li>{issue}</li>
+																))}
+														</ul>
 													</TableCell>
 													<TableCell>
 														<Input className="border-2" type="text" />
@@ -232,6 +257,7 @@ export default function InspectionSheet() {
 						expectedQuantity: item.expectedQuantity,
 						actualQuantity: null,
 						isFunctional: null,
+						issuesFound: [],
 						comments: null,
 					})),
 				),
@@ -253,5 +279,46 @@ export default function InspectionSheet() {
 					: item,
 			),
 		)
+		checkForIssues(itemId)
+	}
+
+	async function changeIsFunctional(
+		itemId: string,
+		isFunctional: boolean | null,
+	) {
+		setInspectionResults((prev) =>
+			prev.map((item) => {
+				if (item.itemId !== itemId) return item
+
+				const updatedItem = { ...item, isFunctional }
+				console.log(updatedItem)
+				return {
+					...updatedItem,
+					issuesFound: getIssues(updatedItem),
+				}
+			}),
+		)
+	}
+
+	function getIssues(item) {
+		const issues: string[] = []
+
+		if (item.actualQuantity !== null) {
+			if (item.actualQuantity < item.expectedQuantity) {
+				issues.push(
+					`Missing item(s): ${item.expectedQuantity - item.actualQuantity}`,
+				)
+			} else if (item.actualQuantity > item.expectedQuantity) {
+				issues.push(
+					`Extra item(s): ${item.actualQuantity - item.expectedQuantity}`,
+				)
+			}
+		}
+
+		if (item.isFunctional === false) {
+			issues.push("Item not functional")
+		}
+		console.log(typeof item.isFunctional)
+		return issues
 	}
 }
